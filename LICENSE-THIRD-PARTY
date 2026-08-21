@@ -1,0 +1,13 @@
+# Third-party components
+
+## Three.js — MIT
+
+`viz/three.module.min.js` and `viz/OrbitControls.js` are redistributed from the
+Three.js project, Copyright (c) 2010-2023 Three.js Authors, under the MIT
+licence. The upstream `@license` header is retained verbatim in the minified
+bundle; do not strip it when re-vendoring.
+
+    https://github.com/mrdoob/three.js
+
+No other third-party code is bundled. The site loads nothing from a CDN and has
+no build step or package dependencies.

@@ -1,0 +1,15 @@
+name = "sealevelrise-ice"
+main = "src/worker.js"
+compatibility_date = "2026-08-20"
+
+# Sources update daily at best; GRACE-FO monthly. Six-hourly is enough to keep
+# the staleness counter honest without hammering anyone's server.
+[triggers]
+crons = ["0 */6 * * *"]
+
+[[kv_namespaces]]
+binding = "ICE"
+id = "3ec856ce19234bdf9fdce7fbe29401e1"
+
+[observability]
+enabled = true

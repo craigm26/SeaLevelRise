@@ -10,10 +10,16 @@ stated account of where the public record runs out.
 |---|---|
 | `index.html` | Data catalogue, method, provenance audit, sea-level scenarios, insurer-exit analysis |
 | `viewer.html` | **3D visualiser** — LiDAR terrain, Biscayne aquifer, drainage, injection wells, buildings |
+| `ice.html` | **Upstream ice monitor** — live indicators behind the high-end tail, with the lag on every number |
+| `ice-monitor/` | Cloudflare Worker + KV that feeds `ice.html` on a six-hourly cron |
 | `CLAUDE.md` | Handoff context — read this before modifying anything |
 | `DEPLOY.md` | Push and Cloudflare Pages steps |
 
 Static, no build step, no framework. Three.js is vendored. `npx wrangler pages deploy .`
+The ice monitor is a separate Worker; see `ice-monitor/` and `DEPLOY.md`.
+
+**Licence:** code MIT (`LICENSE`), derived data CC BY 4.0 (`LICENSE-DATA`), vendored
+Three.js MIT (`LICENSE-THIRD-PARTY`). Upstream source data keeps its own agency terms.
 
 ---
 
@@ -92,6 +98,8 @@ fell **69%** — private carriers taking risk *back* in the most exposed large c
 ```
 index.html              docs + charts (hand-rolled SVG, no chart library)
 viewer.html             3D visualiser (Three.js, WebGL)
+ice.html                upstream ice monitor (reads the Worker API)
+ice-monitor/            Worker + KV + 6-hourly cron feeding ice.html
 data.json               chart payloads for index.html
 viz/                    browser payloads for the 3D visualiser (~2.3 MB)
   terrain.png/.json     280×478 heightmap, R = high byte, G = low byte
@@ -114,6 +122,7 @@ scripts/
   fetch_large_datasets.sh   rebuilds the 1 m DEM mosaic from USGS
   derive_ffe.py             the first-floor-elevation derivation
   build_viz_payloads.py     regenerates everything in viz/
+  fetch_nfip_v3.py          re-extracts NFIP claims from OpenFEMA v3 and diffs vs v2
 .github/workflows/deploy.yml   optional CI deploy (disabled by default)
 ```
 
@@ -133,14 +142,38 @@ a plausible-looking wrong answer rather than an obvious one.
 Bathtub-plus-drainage-capacity — **not** MIKE, HEC-RAS, or XPSWMM.
 
 - **Tidal stage** = MHHW + the sea level rise slider + king tide if enabled.
-- **Water table** = observed seasonal median, raised with sea level at a **0.85 coupling
-  coefficient — a screening assumption, not a calibrated value.**
+- **Water table** = observed seasonal median, raised with sea level at a coupling
+  coefficient defaulting to **0.85 — a screening assumption, not a calibrated value.**
+  It is now a slider in the viewer, because the spread it produces *is* the uncertainty.
 - **Storm ponding** = Atlas 14 24-hour depth less surviving drainage capacity, where capacity
   shrinks as the water table nears the surface. Uniform; does not route downhill.
 - **Pipe elevations are inferred** — grade minus an assumed 5 ft cover.
 
 Toggle ground opacity down to see the aquifer sitting a few feet below the surface with the
 drainage network already inside it. That view is the point of the whole build.
+
+## The upstream monitor
+
+`ice.html` watches the physical drivers of the tail this package already publishes —
+AR6 SSP5-8.5 low confidence, **p95 = 8.39 ft** at Virginia Key in 2100, driven almost
+entirely by marine ice sheet instability in West Antarctica. It is deliberately built
+around one trap:
+
+> **What updates fastest contributes least.** Sea ice extent is daily and adds nothing
+> directly to sea level, because it is already floating. Ice sheet *mass* is what raises
+> sea level, is monthly, and is **currently unavailable** to the monitor — GRACE-FO
+> mascons sit behind NASA Earthdata authentication with no anonymous endpoint.
+
+So every indicator carries its observation date, its lag, and whether it raises sea level
+at all; staleness is judged against each source's own cadence rather than a flat threshold.
+Tripwires are pre-registered — stated in advance with what they would and would not mean,
+so they cannot be moved after the fact. The GRACE-FO tripwire is published as **unarmed**
+rather than dropped.
+
+Live sources: NSIDC Sea Ice Index v4.0 (both poles, with 1981–2010 climatology for σ
+anomalies), NOAA CPC Niño 3.4, NOAA CO-OPS station 8723214. Imagery via NASA Worldview —
+Greenland renders in northern summer; the Amundsen Sea is in polar night from roughly
+April to September and returns a black frame, which the page says rather than hides.
 
 ## Sources
 

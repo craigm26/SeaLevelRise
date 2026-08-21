@@ -82,3 +82,40 @@ python3 -m http.server 8080
 `_headers` sets security headers plus cache policy: `data.json` and the `viz/` payloads cache
 for an hour, HTML always revalidates. If you change a payload and want it live immediately,
 either bump the filename or purge the Cloudflare cache.
+
+## 5. The ice monitor Worker
+
+`ice.html` is served by Pages like everything else, but its data comes from a separate Worker
+with a KV namespace and a six-hourly cron trigger. Deploy it independently:
+
+```bash
+cd ice-monitor
+npx wrangler deploy
+```
+
+Live at `https://sealevelrise-ice.craigm26.workers.dev`:
+
+| Route | Purpose |
+|---|---|
+| `/api/ice` | cached snapshot (what the page reads) |
+| `/api/ice/history` | rolling series, ~6 months at 6-hourly |
+| `/api/ice/refresh` | force a refresh now; useful after changing an adapter |
+
+The KV namespace id is already in `wrangler.toml`. If you recreate it:
+
+```bash
+npx wrangler kv namespace create ICE   # paste the returned id into wrangler.toml
+```
+
+**Deploying the Pages site does not deploy the Worker, and vice versa.** If the tiles show
+stale data after you changed an adapter, you probably deployed Pages and forgot the Worker.
+
+Verify after deploy:
+
+```bash
+curl -s https://sealevelrise-ice.craigm26.workers.dev/api/ice/refresh | head -c 400
+```
+
+Every indicator should carry `observed`, `lagDays`, and `status`. A source in `error` is a
+real failure worth chasing; a source in `unavailable` is a declared gap and is expected —
+GRACE-FO is permanently `unavailable` without NASA Earthdata credentials.

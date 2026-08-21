@@ -1,0 +1,38 @@
+# Data licence — CC BY 4.0
+
+The **derived data** in this repository — everything under `data/`, `viz/`, and
+`data.json` — is licensed under the Creative Commons Attribution 4.0
+International licence (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+
+You may share and adapt it, including commercially, provided you give
+appropriate credit and indicate whether changes were made.
+
+Suggested citation:
+
+    Merry, C. (2026). SeaLevelRise: a screening-level flood-risk data package
+    for downtown Miami. https://github.com/craigm26/SeaLevelRise
+
+## What this licence does and does not cover
+
+**Covered:** the derived products — the provenance audits, the first-floor
+elevation derivation, the drainage completeness analysis, the insurer-exit
+timeline, the assembled scenario tables, and the visualiser payloads in `viz/`.
+
+**Not covered — upstream source data.** The underlying public records carry
+their own terms, and this licence cannot and does not relicense them. USGS,
+NOAA, FEMA, and FDEP products are generally US Government works in the public
+domain. IPCC AR6 projections are redistributed under the terms attached to the
+Zenodo deposit (`10.5281/zenodo.6382554`). Miami-Dade County GIS, the Property
+Appraiser, City of Miami RPW, and Citizens Property Insurance products carry
+county- and agency-specific terms. If you redistribute any of those, check the
+originating agency, not this file. `data/README.md` records the provenance of
+every file.
+
+**Not covered — third-party code.** See LICENSE-THIRD-PARTY.
+
+## No warranty
+
+This is screening-level work. It is not an engineered hydraulic model, and
+nothing in it is a substitute for a site-specific flood study, an elevation
+certificate, or professional engineering or insurance advice. It is provided
+without warranty of any kind.

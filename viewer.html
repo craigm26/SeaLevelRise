@@ -215,6 +215,9 @@ kbd{font:11px var(--mono);background:rgba(255,255,255,.09);border-radius:4px;pad
     <input type="range" id="exag" min="1" max="20" step="0.5" value="5">
     <div class="row" style="margin-top:9px"><label>Ground opacity (X-ray)</label><span class="v" id="opacV">100%</span></div>
     <input type="range" id="opac" min="15" max="100" step="1" value="100">
+    <div class="row" style="margin-top:9px"><label>Aquifer coupling</label><span class="v" id="coupV">0.85</span></div>
+    <input type="range" id="coup" min="0.4" max="1" step="0.01" value="0.85" aria-describedby="coupNote">
+    <div class="notebox" id="coupNote" style="margin-top:8px">How much of a sea level rise the water table inherits. <b>0.85 is a screening assumption, not a calibrated value</b> \u2014 it is the least-constrained number in this model. Drag it: the spread you see is the uncertainty.</div>
     <div class="notebox" style="margin-top:10px">Drop ground opacity to see the <b>Biscayne aquifer</b> sitting a few feet below the surface, and how much of the drainage is already inside it.</div>
   </div>
 </div>
@@ -308,7 +311,30 @@ const prog=(p,m)=>{lbar.style.width=(p*100)+'%'; if(m)lmsg.textContent=m;};
 
 /* ---------- scene ---------- */
 const app=$('#app');
-const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+function webglFail(reason){
+  // A WebGL failure must not look like a slow load. The loader bar is indistinguishable
+  // from a hang, so replace it outright and route the reader to the charts.
+  const l=document.getElementById('loader');
+  if(l){
+    l.innerHTML='<div class="t">This visualiser needs WebGL</div>'
+      +'<div class="s" style="max-width:46ch;line-height:1.6;margin-top:10px">'
+      +'Your browser or device could not create a 3D context'+(reason?' ('+reason+')':'')+'. '
+      +'Every number the visualiser shows is also published as charts and tables.</div>'
+      +'<div class="s" style="margin-top:14px"><a href="/" style="color:#5aa2ea">Open the data &amp; method page \u2192</a></div>';
+    l.style.opacity='1'; l.style.pointerEvents='auto';
+  }
+  throw new Error('WebGL unavailable'+(reason?': '+reason:''));
+}
+let renderer;
+try{
+  const probe=document.createElement('canvas');
+  const pctx=window.WebGLRenderingContext ? (probe.getContext('webgl2')||probe.getContext('webgl')) : null;
+  if(!pctx) webglFail('no WebGL context');
+  // Release the probe context immediately; contexts are a scarce per-page resource
+  // and holding a second one can starve the real renderer on low-end GPUs.
+  const lose=pctx.getExtension('WEBGL_lose_context'); if(lose) lose.loseContext();
+  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+}catch(e){ if(String(e.message).indexOf('WebGL unavailable')===0) throw e; webglFail(e.message); }
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.sortObjects=true;
@@ -328,7 +354,7 @@ const sun=new THREE.DirectionalLight(0xffffff,1.5); sun.position.set(-2600,4200,
 const fill=new THREE.DirectionalLight(0x88aaff,.45); fill.position.set(3000,1500,-2500); scene.add(fill);
 
 /* ---------- state ---------- */
-const S={slr:1.25,storm:10,king:false,wet:true,exag:5,opac:1,bmode:'flood',
+const S={slr:1.25,storm:10,king:false,wet:true,exag:5,opac:1,coupling:0.85,bmode:'flood',
          stage:0,gw:0,pond:0,playing:false};
 let TER=null,BLD=null,PIPES=null,STR=null,RIMS=null,WELLS=null,ZONES=null,GWD=null;
 let terrainMesh,waterMesh,aquiferMesh,bldMesh,pipeMesh,structMesh,rimMesh,wellMesh,zoneGroup;
@@ -764,7 +790,7 @@ function computeScenario(){
   const gwBase=S.wet?GW.wet:GW.dry;
   // the water table is hydraulically connected to the bay: it rises with sea level,
   // damped inland. A 0.85 coupling is a screening assumption, not a calibrated value.
-  const gw=gwBase+S.slr*0.85+(S.king?HAT_OVER_MHHW*0.35:0);
+  const gw=gwBase+S.slr*S.coupling+(S.king?HAT_OVER_MHHW*0.35:0);
   // storm ponding: Atlas 14 depth, minus whatever the drainage can still take.
   // capacity shrinks as the water table approaches the surface — rejected infiltration.
   const rain=ATLAS[S.storm]/12;                        // ft over 24 hr
@@ -888,6 +914,8 @@ function wire(){
   on('#exag','input',e=>{S.exag=+e.target.value; rebuildVertical(); update();});
   on('#opac','input',e=>{S.opac=+e.target.value/100; terrainMesh.material.opacity=S.opac;
       terrainMesh.material.depthWrite=S.opac>0.93; $('#opacV').textContent=e.target.value+'%';});
+  on('#coup','input',e=>{S.coupling=+e.target.value;
+      $('#coupV').textContent=(+e.target.value).toFixed(2); update();});
   const L={lTerrain:()=>terrainMesh,lBldg:()=>bldMesh,lPipes:()=>pipeMesh,lStruct:()=>structMesh,
            lRims:()=>rimMesh,lWells:()=>wellMesh,lZones:()=>zoneGroup,lWater:()=>waterMesh,
            lAquifer:()=>aquiferMesh};

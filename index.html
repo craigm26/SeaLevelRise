@@ -22,6 +22,12 @@
   --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
   --maxw:1120px;
 }
+/* Visually hidden, still read by screen readers and still copy-pasteable. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.sr-only:focus-within{position:static;width:auto;height:auto;margin:0;overflow:visible;
+  clip:auto;white-space:normal;background:var(--surface);border:1px solid var(--border);
+  padding:10px;border-radius:6px}
 @media (prefers-color-scheme: dark){
   :root:where(:not([data-theme="light"])){
     color-scheme: dark;
@@ -172,16 +178,29 @@ footer a{color:var(--ink-2)}
     <a class="nl" href="#catalog">Data</a>
     <a class="nl" href="#gaps">Gaps</a>
     <a class="nl" href="/viewer" style="color:var(--s1);font-weight:600">3D →</a>
+    <a class="nl" href="/ice" style="color:var(--s1);font-weight:600">Ice monitor →</a>
   </div>
   <button id="themeBtn" aria-label="Toggle colour theme">◐</button>
 </div></nav>
 
 <header><div class="wrap">
   <div class="eyebrow">Screening-level data package · August 2026</div>
-  <h1>What downtown Miami's flood data can and cannot tell you</h1>
-  <p class="lede">An assembled, cited, provenance-tagged dataset for combined rainfall and sea-level flood risk across Brickell, the CBD, and Edgewater — plus an honest account of where the public record simply runs out. Every number on this page traces to a primary source.</p>
+  <h1>The public record cannot see the thing everyone says it can see</h1>
+  <p class="lede">No insurer has ever cited sea level rise as a reason for leaving a market. Not once. We
+  searched six independent ways, including the Senate Budget Committee investigation covering
+  <b>249 million policy records</b> from about 24 insurers. Every documented US exit between 2018 and 2026
+  traces to a realised loss year, rate-approval friction, or litigation — never to the slow hazard itself.</p>
+  <p class="lede" style="margin-top:14px">That is not a hole in the evidence. <b>It is what the mechanism predicts.</b>
+  One-year contracts mean a slow hazard gets quietly repriced, never announced. And over the exact period
+  sea level rise became most visible, Citizens' Miami-Dade book fell <b>69%</b> — private carriers taking risk
+  <i>back</i> in the most exposed large county in America.</p>
+  <p class="lede" style="margin-top:14px">The rest of this page is the dataset that let us establish that:
+  a cited, provenance-tagged package for combined rainfall and sea-level flood risk across Brickell, the CBD,
+  and Edgewater, and a stated account of where the public record runs out. Every number traces to a primary
+  source. <a href="#insurers">Jump to the insurer-exit analysis →</a></p>
   <div class="btns">
     <a class="btn primary" href="/viewer">Open the 3D visualiser →</a>
+    <a class="btn" href="/ice">Is the tail being realised? →</a>
     <a class="btn" href="https://drive.google.com/drive/folders/1sJkjULZLFaTLHJrNBzs_BzJ0kvTjMNbL" target="_blank" rel="noopener">The data folder</a>
     <a class="btn" href="#insurers">When do insurers leave?</a>
     <a class="btn" href="#gaps">What's missing</a>
@@ -992,9 +1011,109 @@ function fillExitTable(){
     </tr>`;}).join('');
 }
 
+/* ---------- accessibility layer ----------
+   The charts are hand-rolled SVG, which gives assistive tech nothing for free.
+   Each one gets role=img + title/desc, plus a hidden table of the real numbers.
+   The table doubles as a citation surface: the figures are selectable and
+   copy-pasteable rather than locked inside path geometry. */
+const CHART_A11Y={
+  slrChart:{
+    title:'Sea level rise at Virginia Key, 2020-2150',
+    desc:'NOAA 2022 and IPCC AR6 projections in feet above the 2005 baseline. All five AR6 scenario medians converge below about one foot at 2050 and diverge only after 2070.',
+    table:()=>{
+      const rows=[];
+      const n=D.slr.noaa||{};
+      for(const k in n){
+        const v=n[k];
+        if(v&&typeof v==='object'&&('2050' in v||2050 in v))
+          rows.push(['NOAA 2022 '+k, v['2050']??v[2050], v['2100']??v[2100]]);
+      }
+      const a=D.slr.ar6||{};
+      const med=(v,y)=>{const c=v&&v[y]; return c==null?'':(typeof c==='object'?c.m:c);};
+      for(const k in a){
+        const v=a[k];
+        if(v&&typeof v==='object'&&v['2050']!=null)
+          rows.push(['IPCC AR6 '+k, med(v,'2050'), med(v,'2100')]);
+      }
+      return {headers:['Scenario','2050 (ft)','2100 (ft)'],rows};
+    }
+  },
+  drainChart:{
+    title:'Storm drain attribute completeness',
+    desc:'Percentage of Miami-Dade drainage records carrying each measured attribute. Pipe diameters are populated on 2.2 percent of segments and inverts on 0.1 percent.',
+    table:()=>({headers:['Layer','Field','Percent populated'],
+      rows:D.drain_audit.map(r=>[r.layer,r.field,r.pct])})
+  },
+  ffeProvChart:{
+    title:'First-floor elevation provenance',
+    desc:'How each building floor elevation was established. 77 percent have no locally observed elevation because FEMA zone X requires no elevation certificate.',
+    table:()=>({headers:['Provenance class','Buildings'],
+      rows:Object.entries(D.ffe.provenance||{}).map(([k,v])=>[k.replace(/_/g,' '),v])})
+  },
+  lagChart:{
+    title:'Freeboard distribution — first-floor elevation above ground',
+    desc:'Histogram of the height difference between derived first-floor elevation and ground elevation, in feet. The mode sits between 9 and 11 feet.',
+    table:()=>{
+      const h=D.ffe.lag_hist||{}, e=h.edges||[], c=h.counts||[], rows=[];
+      for(let i=0;i<c.length;i++) rows.push([e[i]+' to '+e[i+1]+' ft', c[i]]);
+      return {headers:['Bin (ft)','Buildings'],rows};
+    }
+  },
+  stageChart:{
+    title:'Buildings exposed by still-water stage',
+    desc:'Count of buildings below a given still-water stage in feet NAVD88.',
+    table:()=>({headers:['Threshold','Stage (ft NAVD88)','Buildings below'],
+      rows:(D.ffe.stage_exposure||[]).map(r=>[r.label,r.stage,r.buildings])})
+  },
+  citizensChart:{
+    title:'Citizens Property Insurance, Miami-Dade',
+    desc:'Policies in force and exposure over time. The Miami-Dade book fell 69 percent as private carriers took wind risk back.',
+    table:()=>({headers:['Date','Policies in force','Exposure'],
+      rows:D.citizens.map(r=>[r.date,r.pif,r.exposure])})
+  },
+  claimsChart:{
+    title:'NFIP claims by ZIP code',
+    desc:'National Flood Insurance Program claims and payouts for the five downtown ZIP codes, 1978 to 2025.',
+    table:()=>({headers:['ZIP','Claims','Total paid (USD)','First year','Last year'],
+      rows:D.claims_summary.map(r=>[r.zip,r.claims,r.total_paid_usd,r.first_year,r.last_year])})
+  },
+  fairChart:{
+    title:'California FAIR Plan policies in force',
+    desc:'Residual-market growth in California, shown as the contrast case to Florida.',
+    table:()=>({headers:['Year','Policies in force'],rows:D.fair_plan.map(r=>[r.y,r.pif])})
+  }
+};
+
+function applyA11y(){
+  for(const id in CHART_A11Y){
+    const box=document.getElementById(id); if(!box) continue;
+    const spec=CHART_A11Y[id];
+    const svg=box.querySelector('svg');
+    if(svg){
+      svg.setAttribute('role','img');
+      svg.setAttribute('aria-labelledby',id+'-t '+id+'-d');
+      const t=document.createElementNS(NS,'title'); t.id=id+'-t'; t.textContent=spec.title;
+      const dsc=document.createElementNS(NS,'desc'); dsc.id=id+'-d'; dsc.textContent=spec.desc;
+      svg.insertBefore(dsc,svg.firstChild); svg.insertBefore(t,svg.firstChild);
+    }
+    box.parentNode.querySelectorAll(':scope > .sr-only[data-a11y="'+id+'"]').forEach(n=>n.remove());
+    let data; try{ data=spec.table(); }catch(e){ data=null; }
+    if(!data||!data.rows||!data.rows.length) continue;
+    const wrap=document.createElement('div');
+    wrap.className='sr-only'; wrap.dataset.a11y=id;
+    const esc=v=>String(v==null?'':v).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    wrap.innerHTML='<table><caption>'+esc(spec.title)+' — underlying data</caption><thead><tr>'
+      +data.headers.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'
+      +data.rows.map(r=>'<tr>'+r.map((c,i)=>i===0?'<th scope="row">'+esc(c)+'</th>':'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')
+      +'</tbody></table>';
+    box.parentNode.insertBefore(wrap,box.nextSibling);
+  }
+}
+
 function drawAll(){
   if(!D)return;
   drawSLR();drawDrain();drawFFEProv();drawLAG();drawStage();drawCitizens();drawClaims();drawFair();
+  applyA11y();
 }
 
 document.querySelectorAll('#exitFilter [data-st]').forEach(b=>{
