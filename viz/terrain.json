@@ -1,0 +1,14 @@
+{
+ "gw": 280,
+ "gh": 478,
+ "encoding": "R=high byte, G=low byte; q=(R*256+G)/65535; elev_ft=zmin+q*(zmax-zmin)",
+ "width_m": 4561.0,
+ "height_m": 7781.0,
+ "zmin_ft": -1.9998692635583877,
+ "zmax_ft": 34.53401404476182,
+ "origin_utm17n": [
+  578681.0,
+  2848232.0
+ ],
+ "crs": "EPSG:26917"
+}

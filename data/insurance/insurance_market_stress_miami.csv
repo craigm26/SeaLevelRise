@@ -1,0 +1,53 @@
+metric,geography,year,value,unit,source_url
+citizens_policies_in_force,Florida,2026-07-31,278196,policies,https://www.citizensfla.com/policies-in-force
+citizens_policies_in_force,Florida,2026-04-30,294894,policies,https://www.citizensfla.com/-/20260430-policies-in-force
+citizens_total_exposure,Florida,2026-04-30,88.5,billion USD,https://www.citizensfla.com/-/20260430-policies-in-force
+citizens_policies_in_force,Florida,2025-12-31,395337,policies,https://www.citizensfla.com/policies-in-force
+citizens_policies_in_force,Florida,2025-12-19,396387,policies,https://www.wusf.org/politics-issues/2025-12-27/citizens-property-insurance-now-has-fewer-than-400-000-policies
+citizens_policies_in_force_peak,Florida,2023,1400000,policies,https://www.wusf.org/politics-issues/2025-12-27/citizens-property-insurance-now-has-fewer-than-400-000-policies
+citizens_pif_change_2025,Miami-Dade County,2025,-52,percent,https://www.axios.com/local/miami/2026/03/02/citizens-insurance-florida-miami-broward-palm-beach
+citizens_pif_change_2025,Broward County,2025,-56,percent,https://www.axios.com/local/miami/2026/03/02/citizens-insurance-florida-miami-broward-palm-beach
+citizens_pif_change_2025,Palm Beach County,2025,-65,percent,https://www.axios.com/local/miami/2026/03/02/citizens-insurance-florida-miami-broward-palm-beach
+citizens_policies_in_force,SE Florida 4 counties (Miami-Dade/Broward/Palm Beach/Monroe),2025-12-31,144000,policies,https://www.axios.com/local/miami/2026/03/02/citizens-insurance-florida-miami-broward-palm-beach
+citizens_market_share,Florida,2025,<10,percent of market,https://www.axios.com/local/miami/2026/03/02/citizens-insurance-florida-miami-broward-palm-beach
+citizens_2026_rate_change_avg,Florida,2026,-5.6,percent,https://www.flgov.com/eog/news/press/2025/governor-ron-desantis-announces-rate-reductions-miami-dade-county-auto-insurance
+citizens_policyholders_with_rate_decrease,Miami-Dade County,2026,75,percent,https://www.flgov.com/eog/news/press/2025/governor-ron-desantis-announces-rate-reductions-miami-dade-county-auto-insurance
+insurer_insolvency,Florida,2020,Windhaven Insurance,company,https://figafacts.com/category/insolvency/
+insurer_insolvency,Florida,2021,Gulfstream Property & Casualty,company,https://figafacts.com/category/insolvency/
+insurer_insolvency,Florida,2021,American Capital Assurance,company,https://figafacts.com/category/insolvency/
+insurer_insolvency,Florida,2022,St. Johns Insurance Co.,company,https://www.cbsnews.com/miami/news/sixth-florida-property-insurer-declared-insolvent/
+insurer_insolvency,Florida,2022,Avatar Property & Casualty,company,https://www.cbsnews.com/miami/news/sixth-florida-property-insurer-declared-insolvent/
+insurer_insolvency,Florida,2022,Lighthouse Property Insurance Corp.,company,https://www.cbsnews.com/miami/news/sixth-florida-property-insurer-declared-insolvent/
+insurer_insolvency,Florida,2022,Southern Fidelity Insurance Co.,company,https://www.cbsnews.com/miami/news/sixth-florida-property-insurer-declared-insolvent/
+insurer_insolvency,Florida,2022,Weston Property & Casualty,company,https://www.cbsnews.com/miami/news/sixth-florida-property-insurer-declared-insolvent/
+insurer_insolvency,Florida,2022,FedNat Insurance Co.,company,https://www.cbsnews.com/miami/news/sixth-florida-property-insurer-declared-insolvent/
+insurer_insolvency,Florida,2023,United Property & Casualty (UPC),company,https://figafacts.com/category/insolvency/
+insurer_withdrawal,Florida,2023,Farmers Insurance (~100000 policies non-renewed),company,https://fortune.com/2023/07/22/housing-market-florida-trouble-as-home-insurers-pull-out/
+insurer_withdrawal,Florida,2023,AAA Auto Club (partial non-renewals),company,https://www.cbsnews.com/news/aaa-insurance-policies-florida-nonrenewal/
+insurer_withdrawal,Florida,2020-2023,Progressive (reduced property exposure),company,https://www.insurance.com/home-and-renters-insurance/home-insurers-leaving-florida
+insurer_withdrawal,Florida,2020-2023,Bankers Insurance,company,https://www.insurance.com/home-and-renters-insurance/home-insurers-leaving-florida
+insurer_withdrawal,Florida,2020-2023,Lexington (AIG),company,https://www.insurance.com/home-and-renters-insurance/home-insurers-leaving-florida
+new_insurers_entering_market,Florida,2023-2025,11,companies,https://www.flgov.com/eog/news/press/2025/governor-ron-desantis-announces-rate-reductions-miami-dade-county-auto-insurance
+nfip_rr2_policies_with_increase,Florida,2021,80,percent,https://www.valuepenguin.com/new-risk-rating-flood-insurance-rate-increases
+nfip_rr2_policies_with_decrease,Florida,2021,20,percent,https://www.valuepenguin.com/new-risk-rating-flood-insurance-rate-increases
+nfip_rr2_policies_affected,Florida,2021,1727900,policies,https://www.valuepenguin.com/new-risk-rating-flood-insurance-rate-increases
+nfip_rr2_policies_affected,Miami-Dade County,2021,347092,policies,https://www.floodinsuranceguru.com/the-flood-insurance-guru-blog/florida-flood-insurance-miami-nfip-risk-rating-2.0-0
+nfip_rr2_policies_with_increase,Miami-Dade County,2021,77.8,percent,https://www.floodinsuranceguru.com/the-flood-insurance-guru-blog/florida-flood-insurance-miami-nfip-risk-rating-2.0-0
+nfip_rr2_policies_with_decrease,Miami-Dade County,2021,22.2,percent,https://www.floodinsuranceguru.com/the-flood-insurance-guru-blog/florida-flood-insurance-miami-nfip-risk-rating-2.0-0
+nfip_rr2_increase_0_10_per_month,Miami-Dade County,2021,246303,policies,https://www.floodinsuranceguru.com/the-flood-insurance-guru-blog/florida-flood-insurance-miami-nfip-risk-rating-2.0-0
+nfip_avg_flood_premium,Florida,2021,600,USD per year,https://www.floodinsuranceguru.com/the-flood-insurance-guru-blog/florida-flood-insurance-miami-nfip-risk-rating-2.0-0
+nfip_avg_flood_premium,Miami-Dade County,2025,612,USD per year,https://www.fludzone.com/flood-zones/florida/miami
+nfip_avg_flood_premium,United States,2025,915,USD per year,https://www.fludzone.com/flood-zones/florida/miami
+nfip_policies_in_force,Florida,2025-10,1800000,policies,https://www.cfpublic.org/housing-homelessness/2025-10-03/government-shutdown-hits-fema-flood-insurance-1-8-million-florida-homes
+nfip_policies_in_force,Miami-Dade County,2025,410136,policies,https://www.fludzone.com/flood-zones/florida/miami
+nfip_home_coverage_share,Florida,2024,17.9,percent of homes,https://www.valuepenguin.com/flood-insurance-policies-study
+nfip_claims_share_2023,Florida,2023,51.5,percent of US claims,https://www.valuepenguin.com/flood-insurance-policies-study
+nfip_claim_dollars_share_2023,Florida,2023,67.7,percent of US claim payments,https://www.valuepenguin.com/flood-insurance-policies-study
+flood_insurance_takeup,Miami-Dade County,2025,33,percent of households,https://www.fludzone.com/flood-zones/florida/miami
+crs_class,City of Miami,2025,6,CRS class,https://www.fludzone.com/flood-zones/florida/miami
+crs_discount_sfha,City of Miami,2025,20,percent,https://www.fludzone.com/flood-zones/florida/miami
+crs_class,Unincorporated Miami-Dade County,2024,3,CRS class,https://www.cbsnews.com/amp/miami/news/thousands-of-miami-dade-homeowners-will-soon-get-a-big-discount-on-flood-insurance
+crs_discount_sfha,Unincorporated Miami-Dade County,2024,35,percent,https://www.cbsnews.com/amp/miami/news/thousands-of-miami-dade-homeowners-will-soon-get-a-big-discount-on-flood-insurance
+avg_homeowners_premium,Miami,2026,15576,USD per year,https://insurify.com/homeowners-insurance/florida/miami/
+avg_homeowners_premium,Florida,2026,6504,USD per year,https://insurify.com/homeowners-insurance/florida/miami/
+avg_homeowners_premium,United States,2026,2844,USD per year,https://insurify.com/homeowners-insurance/florida/miami/

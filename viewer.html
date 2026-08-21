@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Downtown Miami — 3D Flood &amp; Aquifer Visualizer</title>
+<meta name="description" content="Interactive 3D visualiser of downtown Miami: LiDAR terrain, the Biscayne aquifer water table, storm drainage, injection wells, buildings and first-floor elevations, under sea level rise and design-storm scenarios.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M3 21c3.2 0 3.2-3 6.5-3s3.3 3 6.5 3 3.2-3 6.5-3 3.3 3 6.5 3' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0b0f14; --panel:rgba(18,23,30,.90); --panel-solid:#12171e;
+  --ink:#f2f4f7; --ink-2:#a8b0bb; --muted:#6f7885; --border:rgba(255,255,255,.11);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s7:#9085e9;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --aqua:#25d0d8; --sea:#2f7fd6;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+  font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+canvas{display:block}
+#app{position:fixed;inset:0}
+button,select,input{font:inherit;color:inherit}
+
+/* loading */
+#loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);z-index:400;gap:16px;transition:opacity .5s}
+#loader .t{font-size:17px;font-weight:600;letter-spacing:-.01em}
+#loader .s{font-size:13px;color:var(--ink-2);font-family:var(--mono)}
+#loader .bar{width:240px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+#loader .bar i{display:block;height:100%;width:0;background:var(--s1);transition:width .25s}
+
+/* panels */
+.panel{position:absolute;background:var(--panel);backdrop-filter:blur(14px);
+  border:1px solid var(--border);border-radius:13px;z-index:20}
+#ctl{top:14px;left:14px;width:308px;max-height:calc(100vh - 300px);overflow-y:auto;padding:0}
+#ctl::-webkit-scrollbar{width:7px}#ctl::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:4px}
+.hd{padding:14px 16px 12px;border-bottom:1px solid var(--border)}
+.hd .ttl{font-weight:660;font-size:15px;letter-spacing:-.02em}
+.hd .sub{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+.hd a{color:var(--s1)}
+.grp{padding:14px 16px;border-bottom:1px solid var(--border)}
+.grp:last-child{border-bottom:none}
+.gl{font-size:10.5px;font-weight:680;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.row:last-child{margin-bottom:0}
+.row label{font-size:12.5px;color:var(--ink-2)}
+.row .v{font:620 12.5px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;
+  background:rgba(255,255,255,.15);outline:none;margin:5px 0 3px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+  background:var(--s1);cursor:pointer;border:2px solid var(--panel-solid);box-shadow:0 0 0 1px var(--s1)}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--s1);
+  cursor:pointer;border:2px solid var(--panel-solid)}
+.ticks{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);
+  font-family:var(--mono);margin-top:1px}
+select{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;
+  padding:6px 9px;font-size:12.5px;cursor:pointer}
+select option{background:var(--panel-solid)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;
+  padding:5px 9px;font-size:11.5px;cursor:pointer;transition:.13s;display:inline-flex;align-items:center;gap:6px;
+  color:var(--ink-2)}
+.chip:hover{background:rgba(255,255,255,.1)}
+.chip.on{background:rgba(57,135,229,.19);border-color:var(--s1);color:var(--ink)}
+.chip i{width:8px;height:8px;border-radius:2px;flex:none;display:inline-block}
+.chip.hatched i{background-image:repeating-linear-gradient(45deg,currentColor 0 2px,transparent 2px 4px)}
+.tog{display:flex;align-items:center;gap:9px;cursor:pointer;padding:5px 0;font-size:12.5px;color:var(--ink-2)}
+.tog input{appearance:none;width:32px;height:18px;border-radius:10px;background:rgba(255,255,255,.14);
+  position:relative;cursor:pointer;flex:none;transition:.16s}
+.tog input:checked{background:var(--s1)}
+.tog input::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+  background:#fff;transition:.16s}
+.tog input:checked::after{transform:translateX(14px)}
+.tog:hover{color:var(--ink)}
+
+/* readout */
+#out{top:14px;right:14px;width:296px;max-height:calc(100vh - 28px);overflow-y:auto;padding:0}
+#out::-webkit-scrollbar{width:7px}#out::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:4px}
+.stat{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px}
+.stat:last-child{border-bottom:none}
+.stat .k{color:var(--ink-2);line-height:1.35}
+.stat .v{font:660 14px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat .v.warn{color:var(--warning)}.stat .v.crit{color:var(--critical)}.stat .v.ok{color:var(--good)}
+.big{padding:12px 0 6px}
+.big .n{font:680 30px/1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.big .l{font-size:11.5px;color:var(--ink-2);margin-top:5px;line-height:1.4}
+.warnbox{background:rgba(208,59,59,.11);border:1px solid rgba(208,59,59,.3);border-radius:9px;
+  padding:10px 12px;font-size:11.5px;color:#ffb3b3;line-height:1.5;margin-top:10px}
+.notebox{background:rgba(255,255,255,.04);border-radius:9px;padding:10px 12px;font-size:11.5px;
+  color:var(--ink-2);line-height:1.55;margin-top:10px}
+.notebox b{color:var(--ink)}
+
+/* legend */
+#leg{bottom:70px;left:14px;padding:13px 15px;max-width:268px}
+
+.lrow{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--ink-2);margin-bottom:6px}
+.lrow:last-child{margin-bottom:0}
+.lsw{width:13px;height:13px;border-radius:3px;flex:none}
+.lsw.hatch{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.85) 0 2px,transparent 2px 5px)}
+.lsw.line{height:3px;width:17px;border-radius:2px}
+
+/* bottom bar */
+#bar{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:7px;
+  background:var(--panel);backdrop-filter:blur(14px);border:1px solid var(--border);
+  border-radius:11px;padding:7px}
+#bar button{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;
+  padding:6px 11px;font-size:11.5px;cursor:pointer;color:var(--ink-2);transition:.13s;white-space:nowrap}
+#bar button:hover{background:rgba(255,255,255,.11);color:var(--ink)}
+#bar button.on{background:rgba(57,135,229,.22);border-color:var(--s1);color:var(--ink)}
+
+#hint{position:absolute;bottom:14px;right:14px;z-index:20;font-size:11px;color:var(--muted);
+  background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:8px 12px;
+  backdrop-filter:blur(14px);line-height:1.6}
+kbd{font:11px var(--mono);background:rgba(255,255,255,.09);border-radius:4px;padding:1px 5px}
+
+#tip{position:fixed;pointer-events:none;background:var(--panel-solid);border:1px solid var(--border);
+  border-radius:9px;padding:9px 12px;font-size:12px;z-index:300;opacity:0;transition:opacity .1s;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:250px;line-height:1.5}
+#tip .t{font-weight:640;margin-bottom:3px}
+#tip .r{color:var(--ink-2);display:flex;justify-content:space-between;gap:10px}
+#tip .r b{color:var(--ink);font-family:var(--mono)}
+
+.collapse{cursor:pointer;user-select:none}
+.collapse::after{content:'−';float:right;color:var(--muted);font-family:var(--mono)}
+.collapsed::after{content:'+'}
+.collapsed + *{display:none}
+
+@media(max-width:1100px){
+  #ctl{width:270px} #out{width:258px}
+  #leg{display:none}
+}
+@media(max-width:780px){
+  #ctl{left:8px;right:8px;top:8px;width:auto;max-height:44vh}
+  #out{left:8px;right:8px;top:auto;bottom:66px;width:auto;max-height:32vh}
+  #bar{bottom:8px;font-size:11px;overflow-x:auto;max-width:calc(100vw - 16px)}
+  #hint{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="loader">
+  <div class="t">Downtown Miami — 3D Flood &amp; Aquifer Visualizer</div>
+  <div class="bar"><i id="lbar"></i></div>
+  <div class="s" id="lmsg">loading terrain…</div>
+</div>
+
+<div class="panel" id="ctl">
+  <div class="hd">
+    <div class="ttl">Downtown Miami</div>
+    <div class="sub">Flood &amp; aquifer, screening level<br><a href="index.html">data &amp; method →</a> · <a href="https://github.com/craigm26/SeaLevelRise" target="_blank" rel="noopener">source ↗</a></div>
+  </div>
+
+  <div class="grp">
+    <div class="gl">Sea level rise</div>
+    <input type="range" id="slr" min="0" max="6" step="0.05" value="1.25">
+    <div class="row" style="margin-top:2px"><label>above MHHW (+0.23 ft NAVD88)</label><span class="v" id="slrV">1.25 ft</span></div>
+    <div class="ticks"><span>0</span><span>2</span><span>4</span><span>6 ft</span></div>
+    <div class="chips" style="margin-top:9px">
+      <button class="chip" data-slr="0">today</button>
+      <button class="chip" data-slr="0.75">2040 Int</button>
+      <button class="chip on" data-slr="1.25">2050 Int-High</button>
+      <button class="chip" data-slr="2.34">2100 SSP2-4.5</button>
+      <button class="chip" data-slr="3.64">2100 NOAA Int</button>
+      <button class="chip" data-slr="5.25">2100 Int-High</button>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="gl">Design storm</div>
+    <select id="storm">
+      <option value="0">none — tidal only</option>
+      <option value="2">2-yr · 5.32 in / 24 hr</option>
+      <option value="10" selected>10-yr · 8.29 in / 24 hr</option>
+      <option value="25">25-yr · 10.5 in / 24 hr</option>
+      <option value="100">100-yr · 14.5 in / 24 hr</option>
+      <option value="500">500-yr · 20.0 in / 24 hr</option>
+    </select>
+    <label class="tog" style="margin-top:8px"><input type="checkbox" id="king"> King tide (HAT, +0.97 ft over MHHW)</label>
+    <label class="tog"><input type="checkbox" id="wet" checked> Wet season water table</label>
+  </div>
+
+  <div class="grp">
+    <div class="gl collapse">Layers</div>
+    <div>
+      <label class="tog"><input type="checkbox" id="lTerrain" checked> Terrain (1 m LiDAR)</label>
+      <label class="tog"><input type="checkbox" id="lBldg" checked> Buildings — 12,479</label>
+      <label class="tog"><input type="checkbox" id="lPipes" checked> Storm drains — 6,620</label>
+      <label class="tog"><input type="checkbox" id="lStruct" checked> Structures — 7,235</label>
+      <label class="tog"><input type="checkbox" id="lRims"> Surveyed rims — 3,054</label>
+      <label class="tog"><input type="checkbox" id="lWells" checked> Injection wells — 2,532</label>
+      <label class="tog"><input type="checkbox" id="lZones"> FEMA flood zones — 142</label>
+      <label class="tog"><input type="checkbox" id="lWater" checked> Flood surface</label>
+      <label class="tog"><input type="checkbox" id="lAquifer" checked> Aquifer water table</label>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="gl">Colour buildings by</div>
+    <select id="bmode">
+      <option value="flood">Flood state under scenario</option>
+      <option value="prov">Data provenance</option>
+      <option value="zone">FEMA flood zone</option>
+      <option value="era">FIRM era (pre/post 1975)</option>
+    </select>
+  </div>
+
+  <div class="grp">
+    <div class="gl">View</div>
+    <div class="row"><label>Vertical exaggeration</label><span class="v" id="exagV">5×</span></div>
+    <input type="range" id="exag" min="1" max="20" step="0.5" value="5">
+    <div class="row" style="margin-top:9px"><label>Ground opacity (X-ray)</label><span class="v" id="opacV">100%</span></div>
+    <input type="range" id="opac" min="15" max="100" step="1" value="100">
+    <div class="notebox" style="margin-top:10px">Drop ground opacity to see the <b>Biscayne aquifer</b> sitting a few feet below the surface, and how much of the drainage is already inside it.</div>
+  </div>
+</div>
+
+<div class="panel" id="out">
+  <div class="grp">
+    <div class="gl">Scenario</div>
+    <div class="big">
+      <div class="n" id="stageV">1.48 ft</div>
+      <div class="l">still-water stage, NAVD88 — MHHW + sea level rise <span id="kingNote"></span></div>
+    </div>
+    <div class="stat"><span class="k">Water table</span><span class="v" id="gwV">0.84 ft</span></div>
+    <div class="stat"><span class="k">Storm ponding added</span><span class="v" id="pondV">0.00 ft</span></div>
+  </div>
+
+  <div class="grp">
+    <div class="gl">Exposure</div>
+    <div class="stat"><span class="k">Buildings below floor elevation</span><span class="v" id="bldgV">—</span></div>
+    <div class="stat"><span class="k">New land inundated<br><span style="color:var(--muted);font-size:10.5px">excludes today’s open water</span></span><span class="v" id="areaV">—</span></div>
+    <div class="stat"><span class="k">Drainage structures submerged<br><span style="color:var(--muted);font-size:10.5px">by the water table, before rain</span></span><span class="v" id="structV">—</span></div>
+    <div class="stat"><span class="k">Injection wells with head above invert</span><span class="v" id="wellV">—</span></div>
+    <div id="wedge" class="warnbox" style="display:none"></div>
+  </div>
+
+  <div class="grp">
+    <div class="gl collapse">Provenance</div>
+    <div>
+      <div class="stat"><span class="k">Pipe inverts measured</span><span class="v crit">0.1%</span></div>
+      <div class="stat"><span class="k">Pipe diameters measured</span><span class="v crit">2.2%</span></div>
+      <div class="stat"><span class="k">Structure grate elevations</span><span class="v crit">2.9%</span></div>
+      <div class="stat"><span class="k">Surveyed rims available</span><span class="v ok">3,034</span></div>
+      <div class="stat"><span class="k">Floor elevations with local basis</span><span class="v crit">17.9%</span></div>
+      <div class="stat"><span class="k">USGS wells inside the area</span><span class="v crit">1 of 31</span></div>
+      <div class="notebox">Every pipe elevation here is <b>inferred</b> — grade minus an assumed 5 ft cover — because the county's invert field is empty on 6,604 of 6,612 segments. Pipes render hatched for that reason. The 3,054 surveyed rims are the only real vertical control in the drainage layer.</div>
+    </div>
+  </div>
+
+  <div class="grp">
+    <div class="gl collapse collapsed">Assumptions &amp; limitations</div>
+    <div>
+      <div class="notebox" style="margin-top:0">
+        <b>This is a screening-level visualiser, not a hydraulic model.</b> It is a bathtub-plus-drainage-capacity representation — not MIKE, HEC-RAS or XPSWMM. An engineered model would differ on pipe surcharge timing, overland flow routing, and tidal phase.<br><br>
+        <b>Groundwater is an initial condition, not a solved subsurface flow field.</b> The water table is drawn as a plane at the observed median for the selected season, interpolated from 31 USGS sites of which one is inside the area. Real heads vary spatially and lag rainfall.<br><br>
+        <b>Storm ponding is a uniform depth</b> scaled by the Atlas 14 depth and reduced by whatever drainage capacity remains once the water table is accounted for. It does not route water downhill between cells.<br><br>
+        <b>Floor elevations are estimates.</b> 77% have no local observational basis — see <a href="index.html#provenance" style="color:var(--s1)">the method</a>.<br><br>
+        <b>No structural or parcel-level damage is implied.</b> Water touching a building in this view means modelled stage exceeded an estimated floor elevation, nothing more.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="leg">
+  <div class="lrow" style="font-weight:640;color:var(--ink);margin-bottom:9px">Legend</div>
+  <div class="lrow"><i class="lsw" style="background:#2f7fd6"></i> Flood surface (tide + storm)</div>
+  <div class="lrow"><i class="lsw" style="background:#25d0d8"></i> Aquifer water table</div>
+  <div class="lrow"><i class="lsw line" style="background:#199e70"></i> Drain above water table</div>
+  <div class="lrow"><i class="lsw line" style="background:#9085e9"></i> Drain inside water table</div>
+  <div class="lrow"><i class="lsw" style="background:#c98500;border-radius:50%"></i> Injection well shaft</div>
+  <div class="lrow"><i class="lsw hatch" style="background:rgba(255,255,255,.12)"></i> Hatched = inferred, not measured</div>
+</div>
+
+<div id="bar">
+  <button data-cam="over">Overview</button>
+  <button data-cam="brickell">Brickell</button>
+  <button data-cam="river">Miami River</button>
+  <button data-cam="edgewater">Edgewater</button>
+  <button data-cam="section">Cross-section</button>
+  <button id="playBtn">▶ Animate SLR</button>
+</div>
+
+<div id="hint"><kbd>drag</kbd> orbit · <kbd>scroll</kbd> zoom · <kbd>right-drag</kbd> pan</div>
+<div id="tip"></div>
+
+<script type="importmap">
+{"imports":{"three":"./viz/three.module.min.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from './viz/OrbitControls.js';
+
+const $=s=>document.querySelector(s);
+const FT=0.3048;                 // ft -> m
+const MHHW=0.23;                 // ft NAVD88
+const HAT_OVER_MHHW=0.97;        // ft
+const GW={dry:0.38,wet:0.84,p95:1.86};
+const ATLAS={0:0,2:5.32,10:8.29,25:10.5,100:14.5,500:20.0};   // in / 24hr
+const COVER_FT=5.0;              // assumed depth to pipe centreline — INFERRED
+
+const lbar=$('#lbar'), lmsg=$('#lmsg');
+const prog=(p,m)=>{lbar.style.width=(p*100)+'%'; if(m)lmsg.textContent=m;};
+
+/* ---------- scene ---------- */
+const app=$('#app');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.sortObjects=true;
+app.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0b0f14);
+scene.fog=new THREE.Fog(0x0b0f14,6000,17000);
+
+const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,5,40000);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=.07;
+controls.maxPolarAngle=Math.PI*0.495; controls.minDistance=200; controls.maxDistance=17000;
+
+scene.add(new THREE.HemisphereLight(0xbcd6ff,0x1a2230,1.25));
+const sun=new THREE.DirectionalLight(0xffffff,1.5); sun.position.set(-2600,4200,2200); scene.add(sun);
+const fill=new THREE.DirectionalLight(0x88aaff,.45); fill.position.set(3000,1500,-2500); scene.add(fill);
+
+/* ---------- state ---------- */
+const S={slr:1.25,storm:10,king:false,wet:true,exag:5,opac:1,bmode:'flood',
+         stage:0,gw:0,pond:0,playing:false};
+let TER=null,BLD=null,PIPES=null,STR=null,RIMS=null,WELLS=null,ZONES=null,GWD=null;
+let terrainMesh,waterMesh,aquiferMesh,bldMesh,pipeMesh,structMesh,rimMesh,wellMesh,zoneGroup;
+let heights=null, HW=0, HH=0, SPANX=0, SPANY=0, ZMIN=0, ZMAX=0;
+
+/* elevation (ft NAVD88) sampled from the heightmap at local metric x,y */
+function elevAt(x,y){
+  if(!heights) return 0;
+  let u=x/SPANX*(HW-1), v=(1-y/SPANY)*(HH-1);
+  u=Math.max(0,Math.min(HW-1.001,u)); v=Math.max(0,Math.min(HH-1.001,v));
+  const i=Math.floor(u),j=Math.floor(v),fx=u-i,fy=v-j;
+  const h=(a,b)=>heights[b*HW+a];
+  return (h(i,j)*(1-fx)+h(i+1,j)*fx)*(1-fy)+(h(i,j+1)*(1-fx)+h(i+1,j+1)*fx)*fy;
+}
+const Y=ft=>ft*FT*S.exag;
+
+/* ---------- load ---------- */
+async function boot(){
+  prog(.05,'loading terrain…');
+  const tmeta=await (await fetch('viz/terrain.json')).json();
+  SPANX=tmeta.width_m; SPANY=tmeta.height_m; HW=tmeta.gw; HH=tmeta.gh;
+  ZMIN=tmeta.zmin_ft; ZMAX=tmeta.zmax_ft;
+
+  const img=new Image(); img.src='viz/terrain.png';
+  await img.decode();
+  const cvs=document.createElement('canvas'); cvs.width=HW; cvs.height=HH;
+  const cx=cvs.getContext('2d',{willReadFrequently:true});
+  cx.drawImage(img,0,0);
+  const px=cx.getImageData(0,0,HW,HH).data;
+  heights=new Float32Array(HW*HH);
+  for(let i=0;i<HW*HH;i++){
+    // R = high byte, G = low byte (see terrain.json "encoding")
+    const q=(px[i*4]*256+px[i*4+1])/65535;
+    heights[i]=ZMIN+q*(ZMAX-ZMIN);
+  }
+  buildTerrain();
+  prog(.25,'loading buildings…');
+  BLD=await (await fetch('viz/buildings.json')).json(); buildBuildings();
+  prog(.5,'loading drainage…');
+  PIPES=await (await fetch('viz/pipes.json')).json(); buildPipes();
+  STR=await (await fetch('viz/structures.json')).json(); buildStructures();
+  prog(.68,'loading wells…');
+  WELLS=await (await fetch('viz/wells.json')).json(); buildWells();
+  RIMS=await (await fetch('viz/rims.json')).json(); buildRims();
+  prog(.82,'loading flood zones…');
+  ZONES=await (await fetch('viz/zones.json')).json(); buildZones();
+  GWD=await (await fetch('viz/groundwater.json')).json();
+  prog(.94,'building surfaces…');
+  buildWater(); buildAquifer();
+  prog(1,'ready');
+  wire(); camPreset('over'); update();
+  setTimeout(()=>{const l=$('#loader'); l.style.opacity=0; setTimeout(()=>l.remove(),520);},260);
+  animate();
+}
+
+/* ---------- terrain ---------- */
+function buildTerrain(){
+  const g=new THREE.PlaneGeometry(SPANX,SPANY,HW-1,HH-1);
+  g.rotateX(-Math.PI/2);
+  const pos=g.attributes.position;
+  const col=new Float32Array(pos.count*3);
+  const c=new THREE.Color();
+  for(let j=0;j<HH;j++)for(let i=0;i<HW;i++){
+    const idx=j*HW+i, e=heights[idx];
+    pos.setY(idx, Y(e));
+    // terrain tint: low land warm-dark, ridge lighter
+    const t=Math.max(0,Math.min(1,(e+2)/18));
+    if(e<0.3){ c.setHSL(0.56,0.42,0.15+0.06*t); }        // below MHHW: bay / channel
+    else { c.setHSL(0.10-0.02*t, 0.16+0.06*(1-t), 0.24+0.34*t); }
+    col[idx*3]=c.r; col[idx*3+1]=c.g; col[idx*3+2]=c.b;
+  }
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));
+  g.computeVertexNormals();
+  const m=new THREE.MeshLambertMaterial({vertexColors:true,transparent:true,opacity:1,
+    side:THREE.DoubleSide,depthWrite:true});
+  terrainMesh=new THREE.Mesh(g,m);
+  terrainMesh.position.set(SPANX/2,0,-SPANY/2);
+  terrainMesh.renderOrder=0;
+  scene.add(terrainMesh);
+  buildSkirt();
+}
+
+let skirtMesh;
+function buildSkirt(){
+  // vertical walls dropping from the tile edge to a floor, so the model reads as a solid block
+  const FLOOR=-60;                       // ft NAVD88, purely visual
+  const edges=[];
+  for(let i=0;i<HW-1;i++) edges.push([i,0,i+1,0]);
+  for(let i=0;i<HW-1;i++) edges.push([i,HH-1,i+1,HH-1]);
+  for(let j=0;j<HH-1;j++) edges.push([0,j,0,j+1]);
+  for(let j=0;j<HH-1;j++) edges.push([HW-1,j,HW-1,j+1]);
+  const pos=new Float32Array(edges.length*18);
+  const XY=(i,j)=>[i/(HW-1)*SPANX, -(1-j/(HH-1))*SPANY];
+  let o=0;
+  edges.forEach(([i1,j1,i2,j2])=>{
+    const [x1,z1]=XY(i1,j1), [x2,z2]=XY(i2,j2);
+    const e1=heights[j1*HW+i1], e2=heights[j2*HW+i2];
+    const q=[[x1,Y(e1),z1],[x2,Y(e2),z2],[x2,Y(FLOOR),z2],
+             [x1,Y(e1),z1],[x2,Y(FLOOR),z2],[x1,Y(FLOOR),z1]];
+    q.forEach(v=>{pos[o++]=v[0];pos[o++]=v[1];pos[o++]=v[2];});
+  });
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.computeVertexNormals();
+  const m=new THREE.MeshBasicMaterial({color:0x161b22,side:THREE.DoubleSide,
+    transparent:true,opacity:.95,depthWrite:true});
+  skirtMesh=new THREE.Mesh(g,m);
+  skirtMesh.userData={edges,FLOOR};
+  skirtMesh.renderOrder=0;
+  scene.add(skirtMesh);
+}
+function restackSkirt(){
+  if(!skirtMesh) return;
+  const {edges,FLOOR}=skirtMesh.userData;
+  const pos=skirtMesh.geometry.attributes.position.array;
+  const XY=(i,j)=>[i/(HW-1)*SPANX, -(1-j/(HH-1))*SPANY];
+  let o=0;
+  edges.forEach(([i1,j1,i2,j2])=>{
+    const [x1,z1]=XY(i1,j1), [x2,z2]=XY(i2,j2);
+    const e1=heights[j1*HW+i1], e2=heights[j2*HW+i2];
+    const q=[[x1,Y(e1),z1],[x2,Y(e2),z2],[x2,Y(FLOOR),z2],
+             [x1,Y(e1),z1],[x2,Y(FLOOR),z2],[x1,Y(FLOOR),z1]];
+    q.forEach(v=>{pos[o++]=v[0];pos[o++]=v[1];pos[o++]=v[2];});
+  });
+  skirtMesh.geometry.attributes.position.needsUpdate=true;
+}
+
+/* ---------- buildings ---------- */
+const PROV_COL=[0x2f9e5e,0xd03b3b,0xc98500];             // observed / none / assumed
+const ZONE_COL=[0x4b5563,0x3987e5,0x199e70,0xd55181];    // X / AE / AH / VE
+const ERA_COL =[0xd95926,0x3987e5];                       // pre / post
+function buildBuildings(){
+  const bs=BLD.b;
+  let triCount=0; bs.forEach(b=>{triCount+=(b.p.length/2)*2+((b.p.length/2)-2);});
+  const pos=new Float32Array(triCount*9), col=new Float32Array(triCount*9);
+  const meta=new Int32Array(bs.length*2);
+  let o=0, ti=0;
+  const push=(x1,y1,z1,x2,y2,z2,x3,y3,z3)=>{
+    pos[o]=x1;pos[o+1]=y1;pos[o+2]=z1;pos[o+3]=x2;pos[o+4]=y2;pos[o+5]=z2;
+    pos[o+6]=x3;pos[o+7]=y3;pos[o+8]=z3;o+=9;
+  };
+  const triOf=[];
+  bs.forEach((b,bi)=>{
+    const n=b.p.length/2, base=b.g/10, top=base+b.h;
+    const start=ti;
+    for(let k=0;k<n;k++){
+      const k2=(k+1)%n;
+      const ax=b.p[k*2], ay=b.p[k*2+1], bx=b.p[k2*2], by=b.p[k2*2+1];
+      push(ax,Y(base),-ay, bx,Y(base),-by, bx,Y(top),-by); ti++;
+      push(ax,Y(base),-ay, bx,Y(top),-by, ax,Y(top),-ay);  ti++;
+    }
+    for(let k=1;k<n-1;k++){
+      push(b.p[0],Y(top),-b.p[1], b.p[k*2],Y(top),-b.p[k*2+1], b.p[(k+1)*2],Y(top),-b.p[(k+1)*2+1]); ti++;
+    }
+    meta[bi*2]=start; meta[bi*2+1]=ti-start;
+    triOf.push([start,ti-start]);
+  });
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));
+  g.computeVertexNormals();
+  const m=new THREE.MeshLambertMaterial({vertexColors:true,transparent:true,opacity:.96});
+  bldMesh=new THREE.Mesh(g,m);
+  bldMesh.userData={tri:triOf};
+  scene.add(bldMesh);
+  colorBuildings();
+}
+function colorBuildings(){
+  if(!bldMesh) return;
+  const bs=BLD.b, tri=bldMesh.userData.tri;
+  const col=bldMesh.geometry.attributes.color.array;
+  const c=new THREE.Color();
+  const stage=S.stage;
+  for(let bi=0;bi<bs.length;bi++){
+    const b=bs[bi], ffe=b.f/10;
+    let hex;
+    if(S.bmode==='flood'){
+      const d=stage-ffe;
+      hex = d>2 ? 0xd03b3b : d>0.5 ? 0xec835a : d>0 ? 0xfab219 : 0x77828f;
+    } else if(S.bmode==='prov') hex=PROV_COL[b.v];
+    else if(S.bmode==='zone')  hex=ZONE_COL[b.z];
+    else                        hex=ERA_COL[b.e];
+    c.setHex(hex);
+    // dim buildings whose floor elevation has no local basis, in every mode but provenance
+    let dim=(S.bmode!=='prov'&&b.v===1)?0.78:1;
+    dim*= 0.80+0.28*Math.min(1,b.h/260);
+    const [st,cnt]=tri[bi];
+    for(let t=st;t<st+cnt;t++){
+      const base=t*9;
+      for(let v=0;v<3;v++){
+        col[base+v*3]=c.r*dim; col[base+v*3+1]=c.g*dim; col[base+v*3+2]=c.b*dim;
+      }
+    }
+  }
+  bldMesh.geometry.attributes.color.needsUpdate=true;
+}
+
+/* ---------- pipes (boxes along each segment) ---------- */
+function buildPipes(){
+  const ps=PIPES.pipes;
+  const segs=[];
+  ps.forEach(p=>{
+    for(let k=0;k+3<p.c.length;k+=2){
+      const x1=p.c[k],y1=p.c[k+1],x2=p.c[k+2],y2=p.c[k+3];
+      const dx=x2-x1,dy=y2-y1, L=Math.hypot(dx,dy);
+      if(L<1||L>400) continue;
+      segs.push([x1,y1,x2,y2,L,p.d||0]);
+    }
+  });
+  const N=segs.length;
+  const pos=new Float32Array(N*36*3), col=new Float32Array(N*36*3);
+  const segZ=new Float32Array(N);
+  const box=new THREE.BoxGeometry(1,1,1);
+  const bidx=box.index.array, bpos=box.attributes.position.array;
+  let o=0;
+  segs.forEach((s,i)=>{
+    const [x1,y1,x2,y2,L,dia]=s;
+    const mx=(x1+x2)/2,my=(y1+y2)/2;
+    const el=elevAt(mx,my)-COVER_FT;         // INFERRED depth
+    segZ[i]=el;
+    const ang=Math.atan2(y2-y1,x2-x1);
+    const w=Math.max(3.2,(dia||18)/12*1.4);  // exaggerated diameter, ft->scene-ish
+    const ca=Math.cos(ang), sa=Math.sin(ang);
+    for(let t=0;t<bidx.length;t++){
+      const vi=bidx[t]*3;
+      let bx=bpos[vi]*L, by=bpos[vi+1]*w, bz=bpos[vi+2]*w;
+      const rx=bx*ca-by*sa, ry=bx*sa+by*ca;
+      pos[o]=mx+rx; pos[o+1]=Y(el)+bz*FT*S.exag; pos[o+2]=-(my+ry); o+=3;
+    }
+  });
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));
+  g.computeVertexNormals();
+  const m=new THREE.MeshLambertMaterial({vertexColors:true,transparent:true,opacity:.92});
+  pipeMesh=new THREE.Mesh(g,m);
+  pipeMesh.userData={segZ,N,segs};
+  scene.add(pipeMesh);
+  colorPipes();
+}
+function colorPipes(){
+  if(!pipeMesh) return;
+  const {segZ,N}=pipeMesh.userData;
+  const col=pipeMesh.geometry.attributes.color.array;
+  const c=new THREE.Color();
+  const gw=S.gw, stage=S.stage;
+  for(let i=0;i<N;i++){
+    const z=segZ[i];
+    let hex;
+    if(z<gw) hex=0x9085e9;             // inside the water table — permanently wet
+    else if(z<stage) hex=0x2f7fd6;     // below tidal stage — tailwater locked
+    else hex=0x199e70;                 // dry, has capacity
+    c.setHex(hex);
+    for(let v=0;v<36;v++){
+      const b=(i*36+v)*3; col[b]=c.r; col[b+1]=c.g; col[b+2]=c.b;
+    }
+  }
+  pipeMesh.geometry.attributes.color.needsUpdate=true;
+}
+function rebuildPipeHeights(){
+  if(!pipeMesh) return;
+  const {segs,segZ,N}=pipeMesh.userData;
+  const pos=pipeMesh.geometry.attributes.position.array;
+  const box=new THREE.BoxGeometry(1,1,1);
+  const bidx=box.index.array, bpos=box.attributes.position.array;
+  let o=0;
+  for(let i=0;i<N;i++){
+    const [x1,y1,x2,y2,L,dia]=segs[i];
+    const mx=(x1+x2)/2,my=(y1+y2)/2, el=segZ[i];
+    const ang=Math.atan2(y2-y1,x2-x1), ca=Math.cos(ang), sa=Math.sin(ang);
+    const w=Math.max(3.2,(dia||18)/12*1.4);
+    for(let t=0;t<bidx.length;t++){
+      const vi=bidx[t]*3;
+      let bx=bpos[vi]*L, by=bpos[vi+1]*w, bz=bpos[vi+2]*w;
+      const rx=bx*ca-by*sa, ry=bx*sa+by*ca;
+      pos[o]=mx+rx; pos[o+1]=Y(el)+bz*FT*S.exag; pos[o+2]=-(my+ry); o+=3;
+    }
+  }
+  pipeMesh.geometry.attributes.position.needsUpdate=true;
+  pipeMesh.geometry.computeVertexNormals();
+}
+
+/* ---------- structures ---------- */
+function buildStructures(){
+  const s=STR.s, N=s.length;
+  const geo=new THREE.CylinderGeometry(4,4,10,7);
+  const mat=new THREE.MeshLambertMaterial({transparent:true,opacity:.95});
+  structMesh=new THREE.InstancedMesh(geo,mat,N);
+  structMesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(N*3),3);
+  const zs=new Float32Array(N);
+  const d=new THREE.Object3D();
+  for(let i=0;i<N;i++){
+    const x=s[i][0],y=s[i][1];
+    const g=elevAt(x,y); zs[i]=g-6;      // assumed structure bottom — INFERRED
+    d.position.set(x,Y(zs[i]),-y); d.scale.set(1,1,1); d.updateMatrix();
+    structMesh.setMatrixAt(i,d.matrix);
+  }
+  structMesh.userData={zs,N};
+  scene.add(structMesh);
+  colorStructures();
+}
+function colorStructures(){
+  if(!structMesh) return;
+  const {zs,N}=structMesh.userData;
+  const c=new THREE.Color();
+  for(let i=0;i<N;i++){
+    c.setHex(zs[i]<S.gw ? 0x9085e9 : (zs[i]<S.stage?0x2f7fd6:0x199e70));
+    structMesh.setColorAt(i,c);
+  }
+  structMesh.instanceColor.needsUpdate=true;
+  if(structMesh.instanceColor) structMesh.instanceColor.needsUpdate=true;
+}
+function restackStructures(){
+  if(!structMesh) return;
+  const {zs,N}=structMesh.userData; const d=new THREE.Object3D();
+  const s=STR.s;
+  for(let i=0;i<N;i++){
+    d.position.set(s[i][0],Y(zs[i]),-s[i][1]); d.updateMatrix();
+    structMesh.setMatrixAt(i,d.matrix);
+  }
+  structMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- surveyed rims ---------- */
+function buildRims(){
+  const r=RIMS.r.filter(v=>v[2]>-9000&&v[2]/10<40&&v[2]/10>-15);
+  const N=r.length;
+  const geo=new THREE.CylinderGeometry(3,3,1,6);
+  const mat=new THREE.MeshLambertMaterial({color:0x2f9e5e,transparent:true,opacity:.95});
+  rimMesh=new THREE.InstancedMesh(geo,mat,N);
+  const d=new THREE.Object3D();
+  for(let i=0;i<N;i++){
+    const rim=r[i][2]/10, bot=r[i][3]>-9000?r[i][3]/10:rim-6;
+    const h=Math.max(1,rim-bot);
+    d.position.set(r[i][0],Y(bot+h/2),-r[i][1]);
+    d.scale.set(1,Math.max(0.2,h*FT*S.exag),1);
+    d.updateMatrix(); rimMesh.setMatrixAt(i,d.matrix);
+  }
+  rimMesh.userData={r,N};
+  rimMesh.visible=false;
+  scene.add(rimMesh);
+}
+function restackRims(){
+  if(!rimMesh) return;
+  const {r,N}=rimMesh.userData; const d=new THREE.Object3D();
+  for(let i=0;i<N;i++){
+    const rim=r[i][2]/10, bot=r[i][3]>-9000?r[i][3]/10:rim-6;
+    const h=Math.max(1,rim-bot);
+    d.position.set(r[i][0],Y(bot+h/2),-r[i][1]);
+    d.scale.set(1,Math.max(0.2,h*FT*S.exag),1); d.updateMatrix();
+    rimMesh.setMatrixAt(i,d.matrix);
+  }
+  rimMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- injection wells ---------- */
+function buildWells(){
+  const w=WELLS.w, N=w.length;
+  const geo=new THREE.CylinderGeometry(2.4,2.4,1,6);
+  const mat=new THREE.MeshLambertMaterial({color:0xc98500,transparent:true,opacity:.85});
+  wellMesh=new THREE.InstancedMesh(geo,mat,N);
+  wellMesh.userData={w,N};
+  scene.add(wellMesh);
+  restackWells();
+}
+function restackWells(){
+  if(!wellMesh) return;
+  const {w,N}=wellMesh.userData; const d=new THREE.Object3D();
+  for(let i=0;i<N;i++){
+    const x=w[i][0],y=w[i][1],dep=Math.min(w[i][2],160);
+    const g=elevAt(x,y);
+    d.position.set(x,Y(g-dep/2),-y);
+    d.scale.set(1,Math.max(1,dep*FT*S.exag),1); d.updateMatrix();
+    wellMesh.setMatrixAt(i,d.matrix);
+  }
+  wellMesh.instanceMatrix.needsUpdate=true;
+}
+
+/* ---------- FEMA zones ---------- */
+function buildZones(){
+  zoneGroup=new THREE.Group();
+  const COL={'AE':0x3987e5,'VE':0xd55181,'AH':0x199e70,'X':0x4b5563};
+  ZONES.z.forEach(z=>{
+    const n=z.r.length/2; const pts=[];
+    for(let k=0;k<n;k++){
+      const x=z.r[k*2],y=z.r[k*2+1];
+      pts.push(new THREE.Vector3(x,Y(elevAt(x,y)+0.6),-y));
+    }
+    pts.push(pts[0].clone());
+    const g=new THREE.BufferGeometry().setFromPoints(pts);
+    const m=new THREE.LineBasicMaterial({color:COL[z.z]||0x4b5563,transparent:true,opacity:.8});
+    zoneGroup.add(new THREE.Line(g,m));
+  });
+  zoneGroup.visible=false;
+  scene.add(zoneGroup);
+}
+function restackZones(){
+  if(!zoneGroup) return;
+  zoneGroup.children.forEach((ln,i)=>{
+    const z=ZONES.z[i]; const p=ln.geometry.attributes.position.array;
+    const n=z.r.length/2;
+    for(let k=0;k<=n;k++){
+      const kk=k%n, x=z.r[kk*2],y=z.r[kk*2+1];
+      p[k*3]=x; p[k*3+1]=Y(elevAt(x,y)+0.6); p[k*3+2]=-y;
+    }
+    ln.geometry.attributes.position.needsUpdate=true;
+  });
+}
+
+/* ---------- water & aquifer planes ---------- */
+function buildWater(){
+  const g=new THREE.PlaneGeometry(SPANX*1.02,SPANY*1.02,1,1); g.rotateX(-Math.PI/2);
+  const m=new THREE.MeshLambertMaterial({color:0x2f7fd6,transparent:true,opacity:.52,
+    depthWrite:false,side:THREE.DoubleSide});
+  waterMesh=new THREE.Mesh(g,m);
+  waterMesh.position.set(SPANX/2,0,-SPANY/2);
+  waterMesh.renderOrder=2;
+  scene.add(waterMesh);
+}
+function buildAquifer(){
+  const g=new THREE.PlaneGeometry(SPANX,SPANY,1,1); g.rotateX(-Math.PI/2);
+  const m=new THREE.MeshBasicMaterial({color:0x25d0d8,transparent:true,opacity:.30,
+    depthWrite:false,side:THREE.DoubleSide});
+  aquiferMesh=new THREE.Mesh(g,m);
+  aquiferMesh.position.set(SPANX/2,0,-SPANY/2);
+  aquiferMesh.renderOrder=1;
+  scene.add(aquiferMesh);
+}
+
+/* ---------- scenario maths ---------- */
+function computeScenario(){
+  const tide=MHHW+S.slr+(S.king?HAT_OVER_MHHW:0);
+  const gwBase=S.wet?GW.wet:GW.dry;
+  // the water table is hydraulically connected to the bay: it rises with sea level,
+  // damped inland. A 0.85 coupling is a screening assumption, not a calibrated value.
+  const gw=gwBase+S.slr*0.85+(S.king?HAT_OVER_MHHW*0.35:0);
+  // storm ponding: Atlas 14 depth, minus whatever the drainage can still take.
+  // capacity shrinks as the water table approaches the surface — rejected infiltration.
+  const rain=ATLAS[S.storm]/12;                        // ft over 24 hr
+  const headroom=Math.max(0,(3.5-gw)/3.5);             // 0..1
+  const captured=rain*(0.30+0.45*headroom);
+  const pond=Math.max(0,rain-captured);
+  S.stage=tide; S.gw=gw; S.pond=pond;
+  return {tide,gw,pond};
+}
+
+/* ---------- stats ---------- */
+function computeStats(){
+  const bs=BLD.b; let below=0, wedge=0;
+  const eff=S.stage;
+  for(let i=0;i<bs.length;i++){
+    const b=bs[i], ffe=b.f/10;
+    const local=Math.max(eff, (b.g/10)+S.pond);      // tidal stage OR ponding on the ground
+    if(local>ffe){ below++; if(b.z===0) wedge++; }
+  }
+  // inundated land area from the terrain grid
+  let cells=0, base=0;
+  for(let i=0;i<heights.length;i++){ if(heights[i]<MHHW) base++; else if(heights[i]<eff) cells++; }
+  const cellA=(SPANX/HW)*(SPANY/HH);
+  const areaKm=cells*cellA/1e6;
+
+  const {zs,N}=structMesh.userData;
+  let sub=0; for(let i=0;i<N;i++) if(zs[i]<S.gw) sub++;
+
+  const w=WELLS.w; let wl=0;
+  for(let i=0;i<w.length;i++){ if(S.gw> elevAt(w[i][0],w[i][1])-3) wl++; }
+  return {below,wedge,areaKm,sub,subPct:100*sub/N,wl,wlPct:100*wl/w.length};
+}
+
+/* ---------- update ---------- */
+function update(){
+  computeScenario();
+  const st=computeStats();
+
+  waterMesh.position.y=Y(S.stage);
+  aquiferMesh.position.y=Y(S.gw);
+  colorBuildings(); colorPipes(); colorStructures();
+
+  $('#slrV').textContent=S.slr.toFixed(2)+' ft';
+  $('#exagV').textContent=S.exag+'×';
+  $('#opacV').textContent=Math.round(S.opac*100)+'%';
+  $('#stageV').textContent=S.stage.toFixed(2)+' ft';
+  $('#kingNote').textContent=S.king?' + king tide':'';
+  $('#gwV').textContent=S.gw.toFixed(2)+' ft';
+  $('#pondV').textContent=S.pond.toFixed(2)+' ft';
+  $('#bldgV').textContent=st.below.toLocaleString()+' ('+(100*st.below/BLD.b.length).toFixed(1)+'%)';
+  $('#areaV').textContent=st.areaKm.toFixed(2)+' km²';
+  const sv=$('#structV'); sv.textContent=st.sub.toLocaleString()+' ('+st.subPct.toFixed(1)+'%)';
+  sv.className='v '+(st.subPct>50?'crit':st.subPct>25?'warn':'');
+  const wv=$('#wellV'); wv.textContent=st.wl.toLocaleString()+' ('+st.wlPct.toFixed(0)+'%)';
+  wv.className='v '+(st.wlPct>50?'crit':st.wlPct>25?'warn':'');
+
+  const wd=$('#wedge');
+  if(st.wedge>0){
+    wd.style.display='block';
+    wd.innerHTML='<b>'+st.wedge.toLocaleString()+' of those buildings sit outside the FEMA SFHA</b> — zone X, '+
+      'no mandatory flood purchase, no elevation certificate on record. This is the uninsured-loss wedge, '+
+      'and it is the same population whose floor elevations have no local observational basis.';
+  } else wd.style.display='none';
+}
+
+/* ---------- exaggeration rebuild ---------- */
+function rebuildVertical(){
+  const pos=terrainMesh.geometry.attributes.position;
+  for(let i=0;i<heights.length;i++) pos.setY(i,Y(heights[i]));
+  pos.needsUpdate=true; terrainMesh.geometry.computeVertexNormals();
+
+  const bs=BLD.b, tri=bldMesh.userData.tri, bp=bldMesh.geometry.attributes.position.array;
+  bs.forEach((b,bi)=>{
+    const n=b.p.length/2, base=b.g/10, top=base+b.h;
+    let o=tri[bi][0]*9;
+    for(let k=0;k<n;k++){
+      bp[o+1]=Y(base); bp[o+4]=Y(base); bp[o+7]=Y(top); o+=9;
+      bp[o+1]=Y(base); bp[o+4]=Y(top);  bp[o+7]=Y(top); o+=9;
+    }
+    for(let k=1;k<n-1;k++){ bp[o+1]=Y(top); bp[o+4]=Y(top); bp[o+7]=Y(top); o+=9; }
+  });
+  bldMesh.geometry.attributes.position.needsUpdate=true;
+  bldMesh.geometry.computeVertexNormals();
+
+  restackSkirt(); rebuildPipeHeights(); restackStructures(); restackWells(); restackRims(); restackZones();
+}
+
+/* ---------- camera ---------- */
+const CAMS={
+  over:     {t:[SPANX*.5,Y(5),-SPANY*.52], p:[SPANX*.5-2100,Y(5)+1750,-SPANY*.5+3500]},
+  brickell: {t:[2050,Y(6),-2600],        p:[560,Y(6)+1150,-500]},
+  river:    {t:[1750,Y(4),-3450],        p:[3750,Y(4)+900,-5000]},
+  edgewater:{t:[2750,Y(6),-6100],        p:[1150,Y(6)+1000,-7900]},
+  section:  {t:[2280,Y(2),-3900],        p:[2280,Y(2)+260,-260]},
+};
+function camPreset(k){
+  const c=CAMS[k]; if(!c) return;
+  if(k==='section'){ $('#opac').value=25; S.opac=.25; terrainMesh.material.opacity=.25; $('#opacV').textContent='25%'; }
+  const t=new THREE.Vector3(...c.t), p=new THREE.Vector3(...c.p);
+  const t0=controls.target.clone(), p0=camera.position.clone(), t1=performance.now();
+  (function ease(){
+    const k2=Math.min(1,(performance.now()-t1)/900), e=1-Math.pow(1-k2,3);
+    controls.target.lerpVectors(t0,t,e); camera.position.lerpVectors(p0,p,e);
+    if(k2<1) requestAnimationFrame(ease);
+  })();
+  document.querySelectorAll('#bar [data-cam]').forEach(b=>b.classList.toggle('on',b.dataset.cam===k));
+}
+
+/* ---------- wiring ---------- */
+function wire(){
+  const on=(id,ev,fn)=>$(id).addEventListener(ev,fn);
+  on('#slr','input',e=>{S.slr=+e.target.value; document.querySelectorAll('[data-slr]')
+      .forEach(b=>b.classList.toggle('on',Math.abs(+b.dataset.slr-S.slr)<0.01)); update();});
+  document.querySelectorAll('[data-slr]').forEach(b=>b.onclick=()=>{
+    S.slr=+b.dataset.slr; $('#slr').value=S.slr;
+    document.querySelectorAll('[data-slr]').forEach(x=>x.classList.toggle('on',x===b)); update();});
+  on('#storm','change',e=>{S.storm=+e.target.value; update();});
+  on('#king','change',e=>{S.king=e.target.checked; update();});
+  on('#wet','change',e=>{S.wet=e.target.checked; update();});
+  on('#bmode','change',e=>{S.bmode=e.target.value; colorBuildings();});
+  on('#exag','input',e=>{S.exag=+e.target.value; rebuildVertical(); update();});
+  on('#opac','input',e=>{S.opac=+e.target.value/100; terrainMesh.material.opacity=S.opac;
+      terrainMesh.material.depthWrite=S.opac>0.93; $('#opacV').textContent=e.target.value+'%';});
+  const L={lTerrain:()=>terrainMesh,lBldg:()=>bldMesh,lPipes:()=>pipeMesh,lStruct:()=>structMesh,
+           lRims:()=>rimMesh,lWells:()=>wellMesh,lZones:()=>zoneGroup,lWater:()=>waterMesh,
+           lAquifer:()=>aquiferMesh};
+  Object.keys(L).forEach(k=>$('#'+k).addEventListener('change',e=>{const o=L[k](); if(o)o.visible=e.target.checked;}));
+  $('#lRims').checked=false; $('#lZones').checked=false;
+  document.querySelectorAll('#bar [data-cam]').forEach(b=>b.onclick=()=>camPreset(b.dataset.cam));
+  document.querySelectorAll('.collapse').forEach(c=>c.onclick=()=>c.classList.toggle('collapsed'));
+  $('#playBtn').onclick=()=>{
+    S.playing=!S.playing;
+    $('#playBtn').textContent=S.playing?'⏸ Pause':'▶ Animate SLR';
+    $('#playBtn').classList.toggle('on',S.playing);
+  };
+  addEventListener('resize',()=>{
+    camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  });
+}
+
+/* ---------- loop ---------- */
+let t0=performance.now();
+function animate(){
+  requestAnimationFrame(animate);
+  const now=performance.now(), dt=(now-t0)/1000; t0=now;
+  if(S.playing){
+    S.slr+=dt*0.22; if(S.slr>6) S.slr=0;
+    $('#slr').value=S.slr; update();
+  }
+  if(waterMesh&&waterMesh.visible){
+    waterMesh.material.opacity=.46+.07*Math.sin(now/1400);
+  }
+  controls.update();
+  renderer.render(scene,camera);
+}
+
+boot().catch(e=>{
+  lmsg.textContent='Could not load: '+e.message;
+  lmsg.style.color='#ff8b8b';
+  console.error(e);
+});
+</script>
+</body>
+</html>

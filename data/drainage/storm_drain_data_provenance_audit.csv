@@ -1,0 +1,22 @@
+layer,field,features,populated,pct_populated,provenance_class,viz_note
+stormwater_lines,TYPE,6612,6612,100.0,official,solid
+stormwater_lines,DIAMETER,6612,145,2.2,assume,hatched + flag as assumed
+stormwater_lines,WIDTH,6612,7,0.1,assume,hatched + flag as assumed
+stormwater_lines,LENGTH,6612,296,4.5,assume,hatched + flag as assumed
+stormwater_lines,DEPTH,6612,3,0.0,assume,hatched + flag as assumed
+stormwater_lines,INVERT_Z1,6612,8,0.1,assume,hatched + flag as assumed
+stormwater_lines,INVERT_Z2,6612,5,0.1,assume,hatched + flag as assumed
+stormwater_lines,BOTTM_ELEV,6612,1366,20.7,interpolate,hatched
+stormwater_lines,TREATMENT,6612,7,0.1,assume,hatched + flag as assumed
+stormwater_lines,MAINT_BY,6612,6612,100.0,official,solid
+stormwater_lines,BASIN,6612,6612,100.0,official,solid
+stormwater_lines,SOURCE,6612,2175,32.9,interpolate,hatched
+stormwater_points,TYPE,7235,7235,100.0,official,solid
+stormwater_points,GRATE_ELEV,7235,207,2.9,assume,hatched + flag as assumed
+stormwater_points,BOTTM_ELEV,7235,22,0.3,assume,hatched + flag as assumed
+stormwater_points,WEIR_ELEV,7235,141,1.9,assume,hatched + flag as assumed
+stormwater_points,VERT_DATUM,7235,444,6.1,assume,hatched + flag as assumed
+stormwater_points,MAINT_BY,7235,7235,100.0,official,solid
+stormwater_points,BASIN,7235,0,0.0,assume,hatched + flag as assumed
+stormwater_points,DEPTH,7235,0,0.0,assume,hatched + flag as assumed
+stormwater_points,DIAMETER,7235,0,0.0,assume,hatched + flag as assumed

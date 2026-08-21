@@ -1,0 +1,23 @@
+{
+  "station_id": "8723214",
+  "station_name": "Virginia Key, Biscayne Bay FL",
+  "units": "feet",
+  "purpose": "Calibration anchors for the king-tide toggle and the 'has this already happened' reality check. Converted to NAVD88 using the station's NAVD88 offset of 12.15 ft above station datum.",
+  "anchors": [
+    {"name": "MHHW", "ft_NAVD88": 0.23,
+     "note": "Mean higher-high water, 1983-2001 epoch. Baseline for the SLR slider."},
+    {"name": "HAT", "ft_NAVD88": 1.20, "ft_above_MHHW": 0.97, "date": "2033-10-09",
+     "note": "Highest astronomical tide. The honest value for a king-tide toggle - an earlier draft assumed +1.5 ft above MHHW, which is ~0.5 ft too aggressive for astronomy alone."},
+    {"name": "Observed maximum water level", "ft_NAVD88": 3.80, "ft_above_MHHW": 3.57,
+     "date": "2017-09-10", "time": "17:00",
+     "note": "Hurricane Irma storm surge. A 'this already happened' marker - NOAA Intermediate does not reach this as a daily high tide until roughly 2100."},
+    {"name": "LAT", "ft_NAVD88": -2.74, "date": "2014-01-31"},
+    {"name": "Observed minimum water level", "ft_NAVD88": -3.30, "date": "1994-03-29"}
+  ],
+  "noaa_flood_thresholds_ft_NAVD88": {"minor": 1.92, "moderate": 2.89, "major": 4.12,
+    "note": "Major flooding has never been recorded at this gauge. NOAA Intermediate projects 70 days/yr by 2100."},
+  "tide_range": {"mean_range_MN_ft": 2.04, "great_diurnal_range_GT_ft": 2.24,
+    "note": "A ~2 ft range means MHHW vs MSL differs by ~1.1 ft - comparable to 45 years of Intermediate SLR. State which tidal stage every scenario assumes."},
+  "control_station": "8724580 Key West, FL",
+  "source": "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/8723214/datums.json"
+}

@@ -1,0 +1,42 @@
+# Deploy to Cloudflare Pages.
+#
+# DISABLED BY DEFAULT — it only runs on manual dispatch. If you connected the repo in the
+# Cloudflare dashboard (see DEPLOY.md step 2), leave it that way; running both deploys twice.
+#
+# To enable: add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as repository secrets,
+# then uncomment the `push:` block below.
+
+name: Deploy to Cloudflare Pages
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sanity-check the payloads
+        run: |
+          set -e
+          for f in data.json viz/terrain.json viz/buildings.json viz/pipes.json \
+                   viz/structures.json viz/rims.json viz/wells.json viz/zones.json \
+                   viz/groundwater.json; do
+            python3 -c "import json,sys; json.load(open('$f'))" || { echo "invalid JSON: $f"; exit 1; }
+            echo "ok  $f"
+          done
+          test -f viz/terrain.png || { echo "missing viz/terrain.png"; exit 1; }
+          test -f viz/three.module.min.js || { echo "missing vendored three.js"; exit 1; }
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy . --project-name=sealevelrise

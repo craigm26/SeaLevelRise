@@ -1,0 +1,11 @@
+node_modules/
+.wrangler/
+.DS_Store
+*.log
+
+# Large source data lives in the Drive folder, not in git.
+# scripts/fetch_large_datasets.sh rebuilds the DEM mosaic from USGS.
+data/large/
+*.tif
+*.geojson
+__pycache__/

@@ -1,0 +1,58 @@
+{
+  "station_id": "8723214",
+  "station_name": "Virginia Key, Biscayne Bay FL",
+  "epoch": "1983-2001",
+  "units": "feet",
+  "accepted": "Nov 06 2020",
+  "orthometric_datum": "NAVD88",
+  "note": "ft_NAVD88 = value - NAVD88 offset. MHHW is the tidal reference for the SLR slider.",
+  "key_values_ft_NAVD88": {
+    "MHHW": 0.23,
+    "MHW": 0.15,
+    "MSL": -0.89,
+    "MLLW": -2.02
+  },
+  "crosswalk": [
+    {
+      "datum": "MHHW",
+      "ft_above_station_datum": 12.38,
+      "ft_NAVD88": 0.23
+    },
+    {
+      "datum": "MHW",
+      "ft_above_station_datum": 12.3,
+      "ft_NAVD88": 0.15
+    },
+    {
+      "datum": "MTL",
+      "ft_above_station_datum": 11.29,
+      "ft_NAVD88": -0.86
+    },
+    {
+      "datum": "MSL",
+      "ft_above_station_datum": 11.26,
+      "ft_NAVD88": -0.89
+    },
+    {
+      "datum": "MLW",
+      "ft_above_station_datum": 10.27,
+      "ft_NAVD88": -1.88
+    },
+    {
+      "datum": "MLLW",
+      "ft_above_station_datum": 10.13,
+      "ft_NAVD88": -2.02
+    },
+    {
+      "datum": "NAVD88",
+      "ft_above_station_datum": 12.15,
+      "ft_NAVD88": 0.0
+    },
+    {
+      "datum": "STND",
+      "ft_above_station_datum": 0.0,
+      "ft_NAVD88": -12.15
+    }
+  ],
+  "source": "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/8723214/datums.json"
+}

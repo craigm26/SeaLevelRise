@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Downtown Miami Flood Risk — Data &amp; Method</title>
+<meta name="description" content="A screening-level data package for combined pluvial and coastal flood risk in downtown Miami: LiDAR terrain, drainage, groundwater, FEMA zones, first-floor elevations, IPCC AR6 sea level projections, and insurance market data — with provenance stated everywhere.">
+<meta property="og:title" content="Downtown Miami Flood Risk — Data &amp; Method">
+<meta property="og:description" content="What downtown Miami's flood data can and cannot tell you. 12,479 buildings, 14,841 groundwater observations, IPCC AR6 projections — and a stated account of where the public record runs out.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M3 21c3.2 0 3.2-3 6.5-3s3.3 3 6.5 3 3.2-3 6.5-3 3.3 3 6.5 3' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Cpath d='M6 14l5-5 5 5 5-5 5 5' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round' opacity='.55'/%3E%3C/svg%3E">
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s7:#4a3aa7;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --seq-100:#cde2fb; --seq-250:#86b6ef; --seq-400:#3987e5; --seq-550:#1c5cab; --seq-700:#0d366b;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --maxw:1120px;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19;
+    --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s7:#9085e9;
+    --seq-100:#0d366b; --seq-250:#184f95; --seq-400:#2a78d6; --seq-550:#5598e7; --seq-700:#9ec5f4;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19;
+  --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s7:#9085e9;
+  --seq-100:#0d366b; --seq-250:#184f95; --seq-400:#2a78d6; --seq-550:#5598e7; --seq-700:#9ec5f4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--page);color:var(--ink);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--page) 88%,transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+nav .wrap{display:flex;align-items:center;gap:8px;height:56px}
+nav .brand{font-weight:640;letter-spacing:-.02em;margin-right:auto;font-size:15px}
+nav a.nl{color:var(--ink-2);text-decoration:none;font-size:13.5px;padding:6px 9px;border-radius:7px;white-space:nowrap}
+nav a.nl:hover{background:var(--surface);color:var(--ink)}
+#themeBtn{background:none;border:1px solid var(--border);color:var(--ink-2);border-radius:7px;
+  padding:5px 9px;cursor:pointer;font:inherit;font-size:13px}
+.navscroll{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.navscroll::-webkit-scrollbar{display:none}
+@media(max-width:860px){nav .navscroll{display:none}}
+
+/* hero */
+header{padding:72px 0 40px;border-bottom:1px solid var(--border)}
+.eyebrow{font:600 12px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--s1);margin-bottom:18px}
+h1{font-size:clamp(30px,5.2vw,50px);line-height:1.06;letter-spacing:-.033em;margin:0 0 20px;font-weight:660;max-width:19ch}
+.lede{font-size:clamp(17px,2.1vw,20px);line-height:1.55;color:var(--ink-2);max-width:66ch;margin:0 0 28px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:9px;
+  text-decoration:none;font-size:14.5px;font-weight:540;border:1px solid var(--border);
+  background:var(--surface);color:var(--ink);transition:transform .12s}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--s1);color:#fff;border-color:transparent}
+
+section{padding:56px 0;border-bottom:1px solid var(--border)}
+h2{font-size:clamp(23px,3vw,31px);letter-spacing:-.024em;margin:0 0 10px;font-weight:640}
+h3{font-size:18px;letter-spacing:-.015em;margin:32px 0 8px;font-weight:620}
+.sub{color:var(--ink-2);max-width:70ch;margin:0 0 28px;font-size:16px}
+p{max-width:72ch}
+
+/* stat tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:12px;margin:26px 0}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 17px}
+.tile .k{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;line-height:1.35}
+.tile .v{font:660 27px/1.05 var(--sans);letter-spacing:-.028em;font-variant-numeric:tabular-nums}
+.tile .u{font-size:13px;color:var(--ink-2);margin-top:5px;line-height:1.4}
+
+/* findings */
+.finding{background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  padding:22px 24px;margin:14px 0;border-left:3px solid var(--s1)}
+.finding h3{margin:0 0 8px;font-size:17.5px;display:flex;gap:10px;align-items:baseline}
+.finding h3 .num{font:700 12px/1 var(--sans);color:var(--s1);letter-spacing:.06em;flex:none;padding-top:2px}
+.finding p{margin:0 0 10px;color:var(--ink-2);font-size:15.5px}
+.finding p:last-child{margin-bottom:0}
+.finding strong{color:var(--ink);font-weight:620}
+.finding.alt{border-left-color:var(--s2)}
+.finding.crit{border-left-color:var(--critical)}
+
+/* figures */
+figure{margin:26px 0;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:20px 22px 16px}
+figcaption{font-size:13.5px;color:var(--ink-2);margin-top:12px;line-height:1.5}
+figcaption b{color:var(--ink);font-weight:600}
+.figtitle{font-weight:620;font-size:16px;margin-bottom:3px;letter-spacing:-.012em}
+.figsub{font-size:13.5px;color:var(--muted);margin-bottom:16px}
+svg{display:block;max-width:100%;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:12px 0 0;font-size:13px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:11px;height:11px;border-radius:3px;flex:none}
+.swatch.line{height:3px;width:15px;border-radius:2px}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:18px 0;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--border);white-space:nowrap}
+th{font-weight:620;color:var(--ink-2);font-size:12px;letter-spacing:.03em;text-transform:uppercase;
+   position:sticky;top:0;background:var(--surface)}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.mono,code{font-family:var(--mono);font-size:12.5px}
+code{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:1.5px 5px}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+  padding:2.5px 8px;border-radius:20px;letter-spacing:.02em;white-space:nowrap}
+.pill.good{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.pill.warn{background:color-mix(in srgb,var(--warning) 22%,transparent);color:#9a6a00}
+.pill.crit{background:color-mix(in srgb,var(--critical) 15%,transparent);color:var(--critical)}
+:root[data-theme="dark"] .pill.warn{color:var(--warning)}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .pill.warn{color:var(--warning)}}
+
+/* gaps */
+.gap{display:grid;grid-template-columns:26px 1fr;gap:14px;padding:15px 0;border-bottom:1px solid var(--border);align-items:start}
+.gap:last-child{border-bottom:none}
+.gap .n{font:700 12px/1.6 var(--mono);color:var(--muted)}
+.gap .t{font-weight:600;margin-bottom:3px;font-size:15.5px}
+.gap .d{color:var(--ink-2);font-size:14.5px;line-height:1.55}
+
+/* prompt */
+.prompt{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-top:22px}
+.prompt .bar{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border)}
+.prompt .bar .t{font-size:13px;font-weight:600;color:var(--ink-2);margin-right:auto}
+.prompt pre{margin:0;padding:20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.72;
+  white-space:pre-wrap;max-height:640px;overflow-y:auto;color:var(--ink-2)}
+.prompt pre b{color:var(--ink);font-weight:600}
+.copy{background:var(--s1);color:#fff;border:none;border-radius:7px;padding:5px 12px;cursor:pointer;font:540 12.5px var(--sans)}
+
+.tooltip{position:fixed;pointer-events:none;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;padding:9px 12px;font-size:12.5px;box-shadow:0 8px 26px rgba(0,0,0,.14);
+  opacity:0;transition:opacity .1s;z-index:100;line-height:1.5;max-width:270px}
+.tooltip .tt{font-weight:640;margin-bottom:3px;color:var(--ink)}
+.tooltip .tr{color:var(--ink-2);display:flex;gap:9px;justify-content:space-between}
+.tooltip .tr b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:600}
+
+footer{padding:44px 0 64px;color:var(--muted);font-size:13.5px}
+footer a{color:var(--ink-2)}
+.note{border-left:2px solid var(--axis);padding:2px 0 2px 16px;color:var(--ink-2);font-size:14.5px;margin:20px 0;max-width:70ch}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px}
+@media print{nav,#themeBtn{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <span class="brand">Downtown Miami Flood Risk</span>
+  <div class="navscroll">
+    <a class="nl" href="#anchors">Anchors</a>
+    <a class="nl" href="#slr">Sea level</a>
+    <a class="nl" href="#findings">Findings</a>
+    <a class="nl" href="#provenance">Provenance</a>
+    <a class="nl" href="#exposure">Exposure</a>
+    <a class="nl" href="#insurance">Insurance</a>
+    <a class="nl" href="#insurers">Insurer exit</a>
+    <a class="nl" href="#catalog">Data</a>
+    <a class="nl" href="#gaps">Gaps</a>
+    <a class="nl" href="viewer.html" style="color:var(--s1);font-weight:600">3D →</a>
+  </div>
+  <button id="themeBtn" aria-label="Toggle colour theme">◐</button>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="eyebrow">Screening-level data package · August 2026</div>
+  <h1>What downtown Miami's flood data can and cannot tell you</h1>
+  <p class="lede">An assembled, cited, provenance-tagged dataset for combined rainfall and sea-level flood risk across Brickell, the CBD, and Edgewater — plus an honest account of where the public record simply runs out. Every number on this page traces to a primary source.</p>
+  <div class="btns">
+    <a class="btn primary" href="viewer.html">Open the 3D visualiser →</a>
+    <a class="btn" href="https://drive.google.com/drive/folders/1sJkjULZLFaTLHJrNBzs_BzJ0kvTjMNbL" target="_blank" rel="noopener">The data folder</a>
+    <a class="btn" href="#insurers">When do insurers leave?</a>
+    <a class="btn" href="#gaps">What's missing</a>
+  </div>
+</div></header>
+
+<section id="anchors"><div class="wrap">
+  <h2>The anchors</h2>
+  <p class="sub">Seven numbers that every scenario in this package is built on. Get these wrong and nothing downstream recovers — in a city whose usable relief is about ten feet, a third of a foot is a design decision.</p>
+
+  <div class="tiles">
+    <div class="tile"><div class="k">MHHW, Virginia Key</div><div class="v">+0.23</div><div class="u">ft NAVD88 · 1983–2001 epoch</div></div>
+    <div class="tile"><div class="k">HAT — king tide</div><div class="v">+1.20</div><div class="u">ft NAVD88 · MHHW + 0.97 ft</div></div>
+    <div class="tile"><div class="k">Observed maximum</div><div class="v">+3.80</div><div class="u">ft NAVD88 · Irma, 10 Sep 2017</div></div>
+    <div class="tile"><div class="k">Building ground elev.</div><div class="v">9.58</div><div class="u">ft NAVD88 median · p5 = 2.94</div></div>
+    <div class="tile"><div class="k">100-yr, 24-hr rainfall</div><div class="v">14.5</div><div class="u">inches · Atlas 14 Vol. 9</div></div>
+    <div class="tile"><div class="k">Water table, wet season</div><div class="v">0.84</div><div class="u">ft NAVD88 median · p95 = 1.86</div></div>
+    <div class="tile"><div class="k">Buildings mapped</div><div class="v">12,479</div><div class="u">with estimated floor elevation</div></div>
+  </div>
+
+  <div class="note">An earlier draft of this project assumed MHHW ≈ −0.16 ft NAVD88 and a king tide of MHHW + 1.5 ft. The published values are <b>+0.23 ft</b> and <b>+0.97 ft</b>. Both errors point the same way — toward under-stating today and over-stating the astronomy — and together they are worth about a foot. Read the datum file, not the memory.</div>
+
+  <h3>NOAA flood thresholds at this gauge, converted to NAVD88</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Threshold</th><th class="num">ft NAVD88</th><th class="num">ft above MHHW</th><th>Recorded to date</th></tr></thead>
+    <tbody>
+      <tr><td>Minor flooding</td><td class="num">1.92</td><td class="num">1.69</td><td>routine — a few days a year</td></tr>
+      <tr><td>Moderate flooding</td><td class="num">2.89</td><td class="num">2.66</td><td>occasional</td></tr>
+      <tr><td>Major flooding</td><td class="num">4.12</td><td class="num">3.89</td><td><span class="pill crit">never once observed</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub" style="margin-top:-8px">Under NOAA's Intermediate scenario, minor flooding reaches <b>365 days a year by 2090</b> and major flooding — which has never happened at this gauge — reaches <b>70 days a year by 2100</b>.</p>
+</div></section>
+
+<section id="slr"><div class="wrap">
+  <h2>Sea level: two scenario families, one axis</h2>
+  <p class="sub">NOAA's 2022 scenarios are magnitude-based and emissions-agnostic; IPCC AR6's are emissions-driven. They are usually shown apart, which hides the useful comparison. NOAA's 2005 baseline and AR6's 1995–2014 mean differ by roughly two millimetres, so they plot together with no correction.</p>
+
+  <figure>
+    <div class="figtitle">Relative sea level at Virginia Key, feet above ~2005</div>
+    <div class="figsub">Solid: NOAA 2022 scenarios. Dashed: IPCC AR6 medium-confidence medians. Shaded: the AR6 SSP5-8.5 low-confidence range — deep uncertainty, not a worst case.</div>
+    <div id="slrChart"></div>
+    <div class="legend" id="slrLegend"></div>
+    <figcaption><b>At 2050 the emissions scenario barely matters.</b> All five AR6 SSP medians span 0.85–1.03 ft — less than the spread within any single scenario. The lines separate after 2070. Before then the uncertainty lives in the ice sheets, not in the emissions pathway, and an emissions toggle that shows visible mid-century difference overstates the science.</figcaption>
+  </figure>
+
+  <div class="cols">
+    <div>
+      <h3>Why this location runs high</h3>
+      <p style="color:var(--ink-2);font-size:15.5px">Virginia Key sits a constant <b style="color:var(--ink)">+0.50 ft above the global mean at 2100 in every scenario</b>. Differencing the AR6 archives with and without vertical land motion isolates the cause: <b style="color:var(--ink)">0.33 ft of that is the land going down</b> — about 1.05 mm/yr of subsidence — and it is scenario-independent. The rest is sterodynamic (Gulf Stream and AMOC) plus the gravitational fingerprint of distant ice loss.</p>
+      <p style="color:var(--ink-2);font-size:15.5px">Because the excess is near-constant in absolute terms, it is <em>proportionally largest under successful mitigation</em>: +41% on top of SSP1-1.9, only +20% on top of SSP5-8.5.</p>
+    </div>
+    <div>
+      <h3>Where the mapping breaks</h3>
+      <p style="color:var(--ink-2);font-size:15.5px">NOAA Intermediate-High (5.25 ft at 2100) and High (6.96 ft) have <b style="color:var(--ink)">no AR6 medium-confidence analogue at all</b> — they exist only inside the low-confidence ice-sheet branch. And NOAA Low (1.44 ft) sits <em>below</em> AR6's most optimistic median.</p>
+      <p style="color:var(--ink-2);font-size:15.5px">The low-confidence branch should never be captioned "worst case." Its 2150 p95 is 20.78 ft and its 2300 p83 is 58.94 ft. There is no defensible worst case to draw — only a band whose upper edge is an artifact of how far the expert judgement was extended.</p>
+    </div>
+  </div>
+
+  <div class="note"><b>Recommended default:</b> NOAA 2022 Intermediate-High at 2050. Not because it is most likely, but because the Southeast Florida Regional Climate Compact specifies Intermediate-High for non-critical and High for critical infrastructure — so defaulting to Intermediate would be <em>more optimistic than the county's own design basis</em>. Caveat worth checking: that guidance is the 2019/2020 edition, itself built on NOAA 2017 curves.</div>
+</div></section>
+
+<section id="findings"><div class="wrap">
+  <h2>Six findings that change what you build</h2>
+  <p class="sub">These came out of the data rather than the brief. Several of them contradict the assumptions the project started with.</p>
+
+  <div class="finding crit">
+    <h3><span class="num">01</span> Over half the drainage is underwater before it rains</h3>
+    <p>Cross-referencing 3,034 surveyed structure elevations against 14,841 groundwater observations: <strong>54.8% of structures with a known bottom sit below the wet-season median water table.</strong> 51.2% sit below even the dry-season median; 66.4% below the p95.</p>
+    <p>They are not accepting inlet flow. They are relieving aquifer pressure. Any model that treats the storm system as available capacity at <span class="mono">t=0</span> is wrong from the first timestep.</p>
+  </div>
+
+  <div class="finding crit">
+    <h3><span class="num">02</span> Downtown doesn't drain to the bay — it drains down</h3>
+    <p>There is no surface outfall inside the study area. The nearest real discharge point is <strong>4 km away</strong>, on the C-7 canal. Downtown discharges instead through <strong>2,594 FDEP Class V injection wells</strong>, median depth 120 ft, straight into the Biscayne aquifer.</p>
+    <p>Tailwater locking at outfalls is real but secondary here. <strong>Rejected infiltration is the co-dominant failure mode</strong> — which means findings 01 and 02 are the same finding, and both are groundwater problems rather than pipe problems.</p>
+  </div>
+
+  <div class="finding alt">
+    <h3><span class="num">03</span> The pipe-capacity layer cannot be built honestly from county data</h3>
+    <p>Of 6,612 pipe segments: <strong>2.2% carry a diameter, 0.1% carry invert elevations, 0% carry depth.</strong> The county's outfall <span class="mono">ELEVATION</span> field is 0.0% populated; the City of Miami's <span class="mono">INVERT</span> is 1.9%.</p>
+    <p>What does exist is vertical control — <strong>3,034 surveyed rim elevations, 2,590 of them explicitly NAVD88.</strong> Build on rims and known bottoms; render everything inferred hatched, with the count in the legend. A green/yellow/red capacity map from this data would be roughly 98% inference wearing the costume of measurement.</p>
+  </div>
+
+  <div class="finding">
+    <h3><span class="num">04</span> 77% of buildings have no measurable floor elevation</h3>
+    <p><strong>9,636 of 12,479 buildings sit in FEMA zone X.</strong> Outside the SFHA no elevation certificate is required, so after deduplication there were <em>fewer than twenty</em> usable local observations for that entire population. Their floor elevations are a borrowed pre-FIRM median.</p>
+    <p>69.5% of all downtown buildings are pre-FIRM — built before 1975, and never required to elevate to anything. <strong>The unmeasured-elevation wedge and the uninsured-loss wedge are the same buildings.</strong></p>
+  </div>
+
+  <div class="finding alt">
+    <h3><span class="num">05</span> Two insurance markets, same water, opposite directions</h3>
+    <p>Miami-Dade's Citizens book fell from <strong>218,947 policies and $76.9 B of exposure in December 2022 to 67,353 and $19.2 B in July 2026</strong> — down 69% in under four years. That is depopulation working: a recovering wind market.</p>
+    <p>Meanwhile 80.2% of Florida's 1.73 M NFIP policies are on an upward glide path to full risk under Rating 2.0. A single blended "fragility index" would misrepresent both markets. Show two tracks on a shared time axis.</p>
+  </div>
+
+  <div class="finding">
+    <h3><span class="num">06</span> Edgewater is the thin-data, thin-coverage corner</h3>
+    <p>ZIP 33137 is <strong>30.4% zone X, only 23.9% post-FIRM, and only 41.7% of its policies carry a filed floor elevation</strong> — against 33128's 3.6% / 30.1% / 69.8%. Oldest buildings, most voluntary coverage, thinnest record.</p>
+    <p>Voluntary policies outside the SFHA are the first to lapse when premiums rise. That is where uninsured loss gets manufactured, and it is measurable rather than rhetorical.</p>
+  </div>
+</div></section>
+
+<section id="provenance"><div class="wrap">
+  <h2>Provenance, quantified</h2>
+  <p class="sub">The point of a provenance layer is to make inference visible. Here is what would be hatched, measured field by field rather than asserted.</p>
+
+  <figure>
+    <div class="figtitle">Storm drain attribute completeness</div>
+    <div class="figsub">Share of features carrying a usable value — whitespace-only placeholders counted as null, which is the difference between a trustworthy audit and a flattering one.</div>
+    <div id="drainChart"></div>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--good)"></i> ● Official — &gt;90% populated</span>
+      <span><i class="swatch" style="background:var(--warning)"></i> ▲ Interpolate — 10–90%</span>
+      <span><i class="swatch" style="background:var(--critical)"></i> ✕ Assume — &lt;10%</span>
+    </div>
+    <figcaption>The geometry is excellent and the hydraulics are absent. <b>Type, maintainer, and basin are complete on every one of the 6,612 segments; diameter is on 145 of them and inverts on eight.</b> This is not unusual for a municipal GIS — the layer was built for asset location, not hydraulic modelling — but it decides what the visualiser is allowed to claim.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="figtitle">First-floor elevation: what each estimate rests on</div>
+    <div class="figsub">12,479 buildings by the evidence behind their estimated floor elevation.</div>
+    <div id="ffeProvChart"></div>
+    <figcaption><b>Only 2,239 buildings (17.9%) have a floor elevation grounded in local observation.</b> The method is sound — NFIP certificates give a measured slab height above grade, stratified by construction era and flood zone — but it can only be applied where certificates exist, and outside the SFHA they do not. In the visualiser, the red band renders hatched.</figcaption>
+  </figure>
+
+  <h3>How the floor elevations were derived</h3>
+  <p style="color:var(--ink-2)">NFIP policy records carry <code>lowestFloorElevation</code> and <code>lowestAdjacentGrade</code>. The difference between them is the height of the first floor above the dirt beside the building, and it is stable within a construction era and flood zone. So it can be measured locally and applied where no certificate exists:</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>FIRM era</th><th>Zone</th><th class="num">n</th><th class="num">p25</th><th class="num">median</th><th class="num">p75</th></tr></thead>
+    <tbody>
+      <tr><td>post-FIRM</td><td>AE</td><td class="num">1,608</td><td class="num">0.90</td><td class="num"><b>2.40</b></td><td class="num">7.40</td></tr>
+      <tr><td>pre-FIRM</td><td>AE</td><td class="num">1,135</td><td class="num">0.80</td><td class="num"><b>1.60</b></td><td class="num">2.50</td></tr>
+      <tr><td>post-FIRM</td><td>VE</td><td class="num">134</td><td class="num">5.50</td><td class="num"><b>10.10</b></td><td class="num">12.80</td></tr>
+      <tr><td>pre-FIRM</td><td>AH</td><td class="num">104</td><td class="num">0.40</td><td class="num"><b>1.35</b></td><td class="num">1.90</td></tr>
+      <tr><td>post-FIRM</td><td>AH</td><td class="num">38</td><td class="num">0.80</td><td class="num"><b>1.30</b></td><td class="num">1.80</td></tr>
+      <tr><td>pre-FIRM</td><td>VE</td><td class="num">26</td><td class="num">0.70</td><td class="num"><b>1.30</b></td><td class="num">4.00</td></tr>
+      <tr><td>either</td><td><b>X</b></td><td class="num"><b>&lt;20</b></td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub" style="margin-top:-6px">Slab height above lowest adjacent grade, in feet, from 5,461 deduplicated NFIP records. Ground elevation comes from the 5th percentile of 1 m LiDAR cells in a 3 m collar outside each building's wall line — the 5th percentile rather than the minimum, because single-cell minima in a dense urban DEM pick up gutters, tree pits, and stairwells.</p>
+
+  <div class="note">The post-FIRM cutoff was <b>derived, not assumed.</b> NFIP's own post-FIRM flag flips cleanly at construction year 1975 — 1974 reads 2 post / 380 pre, and 1975 reads 186 post / 3 pre. The pre-FIRM AE p25 freeboard is <b>−0.70 ft</b>: a quarter of pre-FIRM buildings carrying flood policies sit below their own base flood elevation. That is not an artifact. That is what pre-1975 construction in a mapped floodplain looks like.</div>
+</div></section>
+
+<section id="exposure"><div class="wrap">
+  <h2>Exposure</h2>
+  <p class="sub">Where the ground actually sits, and how many buildings a given still-water level reaches.</p>
+
+  <figure>
+    <div class="figtitle">Ground elevation at building perimeters</div>
+    <div class="figsub">12,479 buildings, lowest adjacent grade in ft NAVD88, 1 ft bins.</div>
+    <div id="lagChart"></div>
+    <figcaption>Downtown sits on the <b>Atlantic Coastal Ridge</b>, which is why the median is 9.58 ft and higher than most people expect. The exposure is not in the bulk of the distribution — it is in the <b>p5 tail at 2.94 ft</b>, along the Miami River and the bay edge. A visualiser that renders the mean tells you almost nothing.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="figtitle">Buildings with estimated floor elevation below a given still-water level</div>
+    <div class="figsub">Tidal term only — before any rainfall ponding.</div>
+    <div id="stageChart"></div>
+    <figcaption>These numbers are small, and they should be. <b>Downtown Miami's tidal problem is concentrated at the water's edge; its rainfall problem is everywhere the drainage fails</b> — which is what the storm scenario models, and which findings 01 and 02 say begins already saturated. If a run shows tidal inundation touching thousands of buildings, the datum handling is wrong, not the city.</figcaption>
+  </figure>
+</div></section>
+
+<section id="insurance"><div class="wrap">
+  <h2>The insurance signal</h2>
+  <p class="sub">Two markets react to the same water on different clocks. Kept separate on purpose.</p>
+
+  <figure>
+    <div class="figtitle">Citizens Property Insurance policies in force — Miami-Dade County</div>
+    <div class="figsub">All lines: personal residential multiperil and wind-only, plus commercial.</div>
+    <div id="citizensChart"></div>
+    <figcaption>Down <b>69% in under four years</b>, and exposure with it — $76.9 B to $19.2 B. Read on its own this looks like a market in retreat; read correctly it is the opposite. Citizens is the insurer of last resort, so a <em>shrinking</em> Citizens book means private carriers are taking risk back. The flood side is moving the other way at the same time.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="figtitle">NFIP claims paid by ZIP and year of loss</div>
+    <div class="figsub">1978–2025, nominal dollars, five downtown ZIPs.</div>
+    <div id="claimsChart"></div>
+    <div class="legend" id="claimsLegend"></div>
+    <figcaption>The record is <b>event-driven, not gradual</b> — Andrew in 1992, Irma in 2017, the December 2019 and 2022 rain events. Brickell (33131) carries the largest single-year total at <b>$3.37 M in 2017</b>; Edgewater (33137) has the most claims overall at 272. Between events the series sits at zero for years at a time, which is exactly why a fifty-year mean is the wrong statistic to build a risk map on.</figcaption>
+  </figure>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>ZIP</th><th>Area</th><th class="num">Claims</th><th class="num">Paid</th><th class="num">Policy records</th><th class="num">Zone X</th><th class="num">Post-FIRM</th><th class="num">Floor elev. filed</th></tr></thead>
+    <tbody id="zipTable"></tbody>
+  </table></div>
+  <p class="sub" style="margin-top:-6px">Zone X share, post-FIRM share, and filed floor elevations come from the full policy extract. <b>The last three columns move together</b> — newer buildings, inside the SFHA, are the ones with measured elevations. Edgewater is weakest on all three.</p>
+</div></section>
+
+<section id="insurers"><div class="wrap">
+  <h2>When do insurers actually leave?</h2>
+  <p class="sub">California is the worked precedent, so we tested the obvious hypothesis against 59 dated, sourced actions across five states, 2018–2026. The answer is not what the climate framing predicts.</p>
+
+  <div class="finding crit" style="border-left-color:var(--critical)">
+    <h3><span class="num">NULL</span> No insurer has ever cited sea level rise as a reason for leaving</h3>
+    <p>Not once, anywhere in the United States. We searched six independent ways: direct queries, NAIC and Ceres climate-risk disclosures, the Senate Budget Committee's 2024 investigation (<strong>249 million policy records from ~24 insurers, 65% of the national market</strong> — it contains non-renewal counts and zero rationales), the Environmental Law Institute's coastal insurance materials, CBO's August 2024 analysis, and coastal-state-specific searches.</p>
+    <p><strong>This is the model's prediction, not a gap in the evidence.</strong> Property insurance is a one-year contract. A carrier facing a hazard that shifts expected loss by low single digits per year simply reprices or non-renews at the moment the number moves. It never has to announce anything, and it never has to reference a projection.</p>
+  </div>
+
+  <figure>
+    <div class="figtitle">California FAIR Plan residential policies in force</div>
+    <div class="figsub">The residual market — where you go when nobody else will write you.</div>
+    <div id="fairChart"></div>
+    <figcaption>Flat at ~140,000 through 2018, then <b>+131% in five years</b>. The inflection is <b>2019 — the year after the Camp Fire</b>, not the year any projection changed. Insurer-initiated non-renewals in the top ten wildfire counties went 5,940 in 2018 to 18,098 in 2019. The trigger is a realised loss year, and it shows up in the data within twelve months.</figcaption>
+  </figure>
+
+  <h3>What actually triggers exit, ranked by evidence</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Mechanism</th><th>Documented as proximate cause</th><th>Strength</th></tr></thead>
+    <tbody>
+      <tr><td><b>Catastrophe / loss-ratio shock</b></td><td>Every case. State Farm General paid <b>$1.26 in claims per $1.00 of premium over nine years</b>; surplus fell $4.16 B (2016) to $1.04 B (end-2024)</td><td><span class="pill crit">primary</span></td></tr>
+      <tr><td><b>Rate-approval friction</b></td><td>California only — and provable by reversal (below)</td><td><span class="pill crit">primary</span></td></tr>
+      <tr><td><b>Litigation environment</b></td><td>Florida only — and it dominated there</td><td><span class="pill crit">primary</span></td></tr>
+      <tr><td>Reinsurance cost and availability</td><td>Amplifier; rarely the initiator on its own</td><td><span class="pill warn">secondary</span></td></tr>
+      <tr><td>Forward-looking climate models</td><td><b>Zero documented cases</b></td><td><span class="pill good">absent</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="cols">
+    <div>
+      <h3>Two natural experiments</h3>
+      <p style="color:var(--ink-2);font-size:15.5px"><b style="color:var(--ink)">California, regulation.</b> Proposition 103 barred insurers from using forward-looking catastrophe models and from passing through net reinsurance cost. Both bans lifted in December 2024. Farmers raised its new-business cap from 7,000 to 9,500 a month on <b style="color:var(--ink)">11 December 2024</b>, explicitly citing the incoming regulations — with wildfire hazard unchanged. Chubb's Evan Greenberg, in the 2024 shareholder letter: <em>"The state suppressed the industry's ability to charge a fair price for wildfire-exposed coverage."</em></p>
+      <p style="color:var(--ink-2);font-size:15.5px"><b style="color:var(--ink)">Florida, litigation.</b> In 2020 Florida generated ~9% of US homeowners claims and <b style="color:var(--ink)">~79% of US homeowners claims litigation</b>. After SB 2-A removed one-way attorney fees and post-loss assignment of benefits, that fell to 4.85% of claims and 41.29% of suits by 2025. Twenty-one new carriers entered; the 2025 combined ratio was 83%, best in a decade. <b style="color:var(--ink)">Hurricane Milton — $30–50 B insured, October 2024 — did not stop the recovery.</b> Hazard unchanged, outcome reversed.</p>
+    </div>
+    <div>
+      <h3>What it means for Miami</h3>
+      <p style="color:var(--ink-2);font-size:15.5px">Over the exact period sea level rise has been most visible in public discussion, the most sea-level-exposed large county in America saw private carriers <em>take risk back</em> faster than anywhere in the country — Citizens' Miami-Dade book fell 69%. If projections drove insurer behaviour, that sign would be inverted.</p>
+      <p style="color:var(--ink-2);font-size:15.5px">Meanwhile the physical signal is real and accelerating: high-tide flood days at Virginia Key went from 0–3 a year before 2015 to <b style="color:var(--ink)">5–7 a year now</b>. It moved the market not at all.</p>
+      <p style="color:var(--ink-2);font-size:15.5px"><b style="color:var(--ink)">Flood is different because NFIP is federal.</b> "Exit" there isn't carrier withdrawal — it's consumer lapse. Risk Rating 2.0 cut new policy uptake 11–39% and existing renewals 5–13%, worst in the lowest income quartile. GAO finds <b style="color:var(--ink)">66% of policies are still below their full-risk rate</b>, median gap ~90%, with roughly 95% reaching full risk by 2037 under the 18%/year cap.</p>
+    </div>
+  </div>
+
+  <h3>The timeline</h3>
+  <p class="sub">59 dated actions. Filter by state; every row links to its source.</p>
+  <div class="chips" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px" id="exitFilter">
+    <button class="btn" data-st="ALL" style="padding:6px 13px;font-size:13px">All</button>
+    <button class="btn" data-st="CA" style="padding:6px 13px;font-size:13px">California (29)</button>
+    <button class="btn" data-st="FL" style="padding:6px 13px;font-size:13px">Florida (12)</button>
+    <button class="btn" data-st="LA" style="padding:6px 13px;font-size:13px">Louisiana (6)</button>
+    <button class="btn" data-st="US" style="padding:6px 13px;font-size:13px">Federal (5)</button>
+  </div>
+  <div class="tbl-wrap" style="max-height:520px;overflow-y:auto"><table>
+    <thead><tr><th>Date</th><th>State</th><th>Entity</th><th>Action</th><th>Stated driver</th><th></th></tr></thead>
+    <tbody id="exitTable"></tbody>
+  </table></div>
+
+  <div class="note"><b>What to actually watch,</b> given that most carriers exit silently — two of the California withdrawals gave no reason at all in their filings, and four published nothing. Behavioural series turn before announcements do: Citizens policies-in-force by county, Florida surplus-lines share, the ratio of rate-decrease to rate-increase filings, reinsurance rate-on-line indices, private flood market share, and NFIP policies-in-force by ZIP. The full list, with access paths and an explicit falsification test, is in <span class="mono">NOTES_insurer_exit_patterns.md</span>.</div>
+</div></section>
+
+<section id="catalog"><div class="wrap">
+  <h2>The data</h2>
+  <p class="sub">Everything below is public and in the shared folder. Sources are primary throughout; the two secondary-sourced items are marked.</p>
+  <div class="btns" style="margin-bottom:26px">
+    <a class="btn primary" href="https://drive.google.com/drive/folders/1sJkjULZLFaTLHJrNBzs_BzJ0kvTjMNbL" target="_blank" rel="noopener">Browse all files on Google Drive →</a>
+  </div>
+
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>File</th><th class="num">Records</th><th>What it is</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">dem/dem_downtown_miami_1m…tif</td><td class="num">4561×7781</td><td>1 m LiDAR terrain, NAVD88 m, UTM 17N</td><td>USGS 3DEP, FL_MiamiDade_D23</td></tr>
+      <tr><td class="mono">dem/terrain_heightmap_4m.png</td><td class="num">1140×1945</td><td>16-bit browser-ready heightmap + decode JSON</td><td>derived</td></tr>
+      <tr><td class="mono">building_ffe_estimates.csv</td><td class="num">12,479</td><td>Estimated floor elevation, IQR band, provenance class</td><td>derived — see notes</td></tr>
+      <tr><td class="mono">building_footprints_downtown_miami.geojson</td><td class="num">12,480</td><td>Footprints + height, 99.9% folio-linked</td><td>Miami-Dade BuildingFootprintUBIDFolio</td></tr>
+      <tr><td class="mono">parcels_downtown_miami.geojson</td><td class="num">12,936</td><td>Parcel polygons, year built, floors, units, DOR code</td><td>Miami-Dade PaParcelView</td></tr>
+      <tr><td class="mono">property_points_downtown_miami.geojson</td><td class="num">68,110</td><td>Incl. 55,424 condo units; roll up via PARENT_FOLIO</td><td>Miami-Dade PaGISView</td></tr>
+      <tr><td class="mono">fema_nfhl_flood_zones_downtown.geojson</td><td class="num">163</td><td>91 AE · 47 VE · 11 AH · 10 X · 4 open water</td><td>FEMA NFHL layer 28</td></tr>
+      <tr><td class="mono">storm_drains_stormwater_lines.geojson</td><td class="num">6,612</td><td>6,426 pipes + trench, channels</td><td>Miami-Dade StormWaterLine</td></tr>
+      <tr><td class="mono">storm_drains_stormwater_points.geojson</td><td class="num">7,235</td><td>4,111 catch basins, 2,224 manholes, 72 wells</td><td>Miami-Dade StormWaterPoint</td></tr>
+      <tr><td class="mono">storm_structure_elevations_city_of_miami.geojson</td><td class="num">3,054</td><td><b>3,034 surveyed rims</b>, 2,590 explicitly NAVD88</td><td>City of Miami RPW / Cartegraph</td></tr>
+      <tr><td class="mono">outfalls_fdep_uic_drainage_wells.geojson</td><td class="num">6,137</td><td>Class V injection wells — how downtown actually drains</td><td>FDEP UIC</td></tr>
+      <tr><td class="mono">groundwater_levels_downtown.csv</td><td class="num">14,841</td><td>Water table observations, 1940–2026, 31 sites</td><td>USGS <span class="mono">api.waterdata.usgs.gov</span></td></tr>
+      <tr><td class="mono">groundwater_wells_miami_dade.csv</td><td class="num">669</td><td>Well inventory, depth, aquifer, period of record</td><td>USGS NWIS site service</td></tr>
+      <tr><td class="mono">ipcc_ar6_slr_virginia_key_ft.csv</td><td class="num">157</td><td>AR6 regional SLR, 5 SSPs + low-confidence, to 2300</td><td>Zenodo 10.5281/zenodo.6382554</td></tr>
+      <tr><td class="mono">slr_scenarios_virginia_key_ft.csv</td><td class="num">75</td><td>NOAA 2022 scenarios, 5 × 15 years, with CI</td><td>NOAA CO-OPS API</td></tr>
+      <tr><td class="mono">noaa_high_tide_flooding_8723214.json</td><td class="num">5 products</td><td>Flood-day projections and observed counts</td><td>NOAA CO-OPS HTF API</td></tr>
+      <tr><td class="mono">atlas14_downtown_miami_pds_depth.csv</td><td class="num">19×10</td><td>Rainfall depth by duration × recurrence interval</td><td>NOAA Atlas 14 Vol. 9</td></tr>
+      <tr><td class="mono">nfip_policies_full_&lt;zip&gt;.csv</td><td class="num">14,875</td><td>Policy records incl. floor elevations, 5 ZIPs</td><td>OpenFEMA <span class="mono">FimaNfipPolicies</span></td></tr>
+      <tr><td class="mono">nfip_claims_&lt;zip&gt;.csv</td><td class="num">760</td><td>Claims 1978–2025, 5 ZIPs</td><td>OpenFEMA <span class="mono">FimaNfipClaims</span></td></tr>
+      <tr><td class="mono">citizens_pif_miami_dade.csv</td><td class="num">180</td><td>County policies in force + exposure, 2022–2026</td><td>Citizens "Detail by County" PDFs</td></tr>
+      <tr><td class="mono">nfip_rr2_florida_profile.csv</td><td class="num">120</td><td>Risk Rating 2.0 premium-change bands</td><td>FEMA, via ArcGIS republication</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Notes files worth reading before you model</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>File</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">NOTES_first_floor_elevations.md</td><td>Full derivation, strata, and the zone-X problem</td></tr>
+      <tr><td class="mono">NOTES_groundwater.md</td><td>Wet/dry season water table; the empirically-derived NAVD88 = NGVD29 − 1.56 ft conversion</td></tr>
+      <tr><td class="mono">NOTES_outfalls.md</td><td>Every endpoint checked; why the outfall premise was wrong</td></tr>
+      <tr><td class="mono">NOTES_slr_scenarios.md</td><td>NOAA ↔ AR6 mapping, baselines, deep uncertainty</td></tr>
+      <tr><td class="mono">NOTES_rr2.md</td><td>Which FEMA routes are permanently closed and why</td></tr>
+      <tr><td class="mono">nfip_policies_extract_log.md</td><td>API limits, what "complete" can and cannot mean here</td></tr>
+      <tr><td class="mono">storm_drain_data_provenance_audit.csv</td><td>Field-by-field completeness — the input to the hatching rule</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section id="gaps"><div class="wrap">
+  <h2>What is still missing</h2>
+  <p class="sub">Documented rather than silent. Two of these are permanently closed; the rest have a named route.</p>
+
+  <div class="gap"><div class="n">01</div><div><div class="t">Elevation certificates</div><div class="d">Would convert 9,636 hatched buildings into solid ones — the single highest-value acquisition left. Public records held by City of Miami floodplain management and Miami-Dade RER, not published in bulk. A records request naming the study area is the fix.</div></div></div>
+
+  <div class="gap"><div class="n">02</div><div><div class="t">Storm drain inverts</div><div class="d">Request the full Cartegraph export from City of Miami RPW — the served layer is a reference extract and the master holds more inverts — and the MS4 outfall inventory from Miami-Dade RER-DERM under FDEP permit <span class="mono">FLS000003</span>.</div></div></div>
+
+  <div class="gap"><div class="n">03</div><div><div class="t">Drainage-well connectivity</div><div class="d">Which inlets feed which of the 2,594 injection wells is not published anywhere. FDEP UIC permit files per <span class="mono">FACILITY_ID</span> hold completion reports with cased intervals and static water levels — the closest thing to an invert that exists downtown.</div></div></div>
+
+  <div class="gap"><div class="n">04</div><div><div class="t">NFIP full-risk premium in dollars <span class="pill crit">closed</span></div><div class="d"><span class="mono">FimaNfipPolicies</span> has no full-risk field, so this is not obtainable from any public API — not merely un-fetched. FEMA's state profile PDFs return Akamai 403 to every automated route. The premium-change <em>bands</em> were recovered; the dollar levels were not.</div></div></div>
+
+  <div class="gap"><div class="n">05</div><div><div class="t">NFIP record counts <span class="pill crit">closed</span></div><div class="d"><span class="mono">$inlinecount</span> returns 503 under any ZIP filter, so "percent complete" has an unknowable denominator. The 14,875 records retrieved are 2.2–3.9× the endpoint's own pagination ceiling — a deep sample, not a census. Note that v2 was frozen 1 June 2026 and is removed after 15 October 2026.</div></div></div>
+
+  <div class="gap"><div class="n">06</div><div><div class="t">Parcel values</div><div class="d"><span class="mono">ASSESSED_VAL_CUR</span> is null service-wide, not just in this bounding box — so no value-at-risk panel can use it. <span class="mono">PRICE_1</span> (last sale price) is populated and would work with a provenance flag, but a sale price is not an assessment.</div></div></div>
+
+  <div class="gap"><div class="n">07</div><div><div class="t">Groundwater interpolation</div><div class="d">Exactly one USGS well (G-3603) sits inside the study area. The downtown water table is interpolated from 31 sites within 8 km. Render it hatched like everything else that is inferred.</div></div></div>
+
+  <div class="gap"><div class="n">08</div><div><div class="t">Compact guidance vintage</div><div class="d">The recommendation to default to Intermediate-High rests on the Southeast Florida Compact's 2019/2020 guidance, itself built on NOAA 2017 curves. Confirm the current regional update before treating it as regulatory practice.</div></div></div>
+
+  <h3>Two traps worth naming</h3>
+  <p style="color:var(--ink-2)">An ArcGIS Online search for "outfall Miami" surfaces a service whose layer is literally named <em>Outfalls</em>, with a <span class="mono">ReceivingWaterBdy</span> field. It is <b style="color:var(--ink)">Miami, Oklahoma</b> — longitude −94.9. Easy to ingest without noticing. And USGS's <span class="mono">waterservices.usgs.gov/nwis/gwlevels/</span> endpoint was decommissioned in early 2026 and now redirects to a blog post; groundwater levels come from the <span class="mono">field-measurements</span> collection on <span class="mono">api.waterdata.usgs.gov</span>.</p>
+</div></section>
+
+<section id="prompt"><div class="wrap">
+  <h2>The build prompt</h2>
+  <p class="sub">Written against the real files, with the measured values substituted for the assumed ones. Attach the folder and paste.</p>
+
+  <div class="prompt">
+    <div class="bar"><span class="t">PROMPT.md</span><button class="copy" id="copyBtn">Copy</button></div>
+    <pre id="promptText">Build a single self-contained interactive 3D HTML visualiser of combined rainfall and sea-level flood risk for downtown Miami (Brickell → CBD → Edgewater, AOI −80.215/25.750 to −80.170/25.820).
+
+Data: https://drive.google.com/drive/folders/1sJkjULZLFaTLHJrNBzs_BzJ0kvTjMNbL
+Code: https://github.com/craigm26/SeaLevelRise
+Read README.md and NOTES_first_floor_elevations.md before writing any code. Sections 3 and 4 of the README change what is honestly buildable.
+
+TERRAIN
+Render dem/terrain_heightmap_4m.png as a 3D surface. Decode per terrain_heightmap_4m.json: elev_m = zmin + pixel/65535*(zmax−zmin); pixel 0 = nodata. Vertical exaggeration slider, default 5× — usable relief is ~2–12 ft NAVD88, so unexaggerated this reads as a flat plate. Work internally in ft NAVD88; the DEM is metres, so convert once at the boundary and label the axis.
+
+SCENARIO CONTROLS
+1. Sea level rise, 0–6 ft, applied on top of MHHW = +0.23 ft NAVD88.
+   Tick marks from slr_scenarios_virginia_key_ft.csv (NOAA 2022) and ipcc_ar6_slr_virginia_key_ft.csv (AR6).
+   Default to NOAA Intermediate-High at 2050 (1.25 ft) — the SE Florida Compact design basis.
+   Mark HAT at +1.20 ft and the Irma observed maximum at +3.80 ft NAVD88 as "this has happened" reference lines.
+   Offer AR6 SSPs as a secondary emissions view. Render the SSP5-8.5 low-confidence branch as a separate hatched deep-uncertainty band, off by default, and never label it "worst case".
+2. Design storm, 2-yr → 500-yr, durations 1-hr / 6-hr / 24-hr, from atlas14_downtown_miami_pds_depth.csv (100-yr/24-hr = 14.5 in).
+3. King tide toggle at HAT = +0.97 ft above MHHW. Not 1.5 ft — that was an assumption and it was wrong.
+
+THE PART MOST MODELS GET WRONG
+Initialise the system wet, not empty. 54.8% of drainage structures with a known bottom sit below the wet-season median water table (0.84 ft NAVD88; dry 0.38; p95 1.86 — groundwater_levels_downtown.csv). They are relieving aquifer pressure, not accepting flow. Available capacity at t=0 is a fraction of nominal, and the visualiser should show which structures start submerged.
+
+Downtown has no surface outfall. It drains DOWN, through 2,594 Class V injection wells (outfalls_fdep_uic_drainage_wells.geojson), median depth 120 ft. Model rejected infiltration when the water table rises, alongside tailwater locking at the distant real outfalls. Do not build a bay-outfall-centric model — that premise is wrong for this bounding box.
+
+DRAINAGE — READ storm_drain_data_provenance_audit.csv FIRST
+2.2% of pipes carry a diameter; 0.1% carry inverts; 0% carry depth. A green/yellow/red capacity map from this data is ~98% inference. Two honest options: render the network geometry-only and drop the capacity claim, or infer and hatch EVERY inferred segment with the count in the legend ("6,467 of 6,612 pipes: diameter inferred"). Build elevations on the 3,034 surveyed rims in storm_structure_elevations_city_of_miami.geojson (2,590 explicitly NAVD88), not on the county's empty invert fields.
+
+BUILDINGS AND FLOOR ELEVATIONS
+building_ffe_estimates.csv carries a per-building estimate, an interquartile band (ffe_lower_ft / ffe_upper_ft), and a provenance class. 9,636 of 12,479 are class no_local_observations — zone X, where no certificate is required and fewer than 20 local observations exist. THESE MUST RENDER HATCHED. Nearly four in five downtown buildings fall in that class, and it is the same population the insurance layer cares about.
+
+PROVENANCE EVERYWHERE
+Solid = official; hatched/desaturated = interpolated or assumed. A provenance toggle that greys out everything inferred should leave the DEM, the FEMA zones, the tide datums, and the surveyed rims standing — and very little else. That is the correct and useful result, not a failure of the build.
+
+INSURANCE LAYER (toggleable)
+Two separate tracks on a shared time axis — they move in opposite directions and blending them lies.
+  Wind/HO: Citizens Miami-Dade PIF 218,947 (Dec 2022) → 67,353 (Jul 2026), exposure $76.9B → $19.2B. Falling Citizens = private carriers returning.
+  Flood/NFIP: 80.2% of Florida's 1.73M policies on an upward Risk Rating 2.0 glide path; ~1 in 3 households covered.
+Hero callout: the uninsured-loss wedge — parcels where modelled ponding exceeds estimated floor elevation but which sit outside the SFHA. 33137 (Edgewater) is 30.4% zone X, 23.9% post-FIRM, 41.7% with a filed elevation. Oldest buildings, most voluntary coverage, thinnest data.
+
+ALSO
+Bowls identified from the DEM, not assumed, labelled with ponding depth per scenario. Legend. Scenario summary: inundated area, parcels affected, critical infrastructure. Camera presets for the worst three hotspots.
+
+ASSUMPTIONS &amp; LIMITATIONS PANEL — be specific, not boilerplate
+· Screening-level model, not MIKE / HEC-RAS / XPSWMM. Name where an engineered model diverges: pipe surcharge timing, overland routing, tidal phase.
+· Groundwater is represented as an initial condition and a rejected-infiltration term, not a full subsurface model. Miami sits on porous limestone; water rises through the ground. Say it prominently.
+· Drain hydraulics are ~98% inferred. Cite the audit CSV.
+· 77% of floor elevations have no local observational basis.
+· Insurance data is ZIP-level proxy, not parcel underwriting. NFIP extracts are deep samples, not a census — the denominator is unknowable.
+· Parcel values unavailable: ASSESSED_VAL_CUR is null service-wide.</pre>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <p style="max-width:70ch">Assembled August 2026 from public sources: USGS 3DEP and NWIS · NOAA CO-OPS, Atlas 14, and the 2022 Sea Level Rise Technical Report · IPCC AR6 WG1 Chapter 9 via Zenodo · FEMA NFHL and OpenFEMA · Miami-Dade County GIS and Property Appraiser · City of Miami RPW · FDEP UIC · Citizens Property Insurance.</p>
+  <p>This is a screening-level data package and documentation site. It is not an engineered hydraulic model, and nothing here is a substitute for a site-specific flood study, an elevation certificate, or professional engineering or insurance advice.</p>
+  <p style="margin-top:22px"><a href="https://github.com/craigm26/SeaLevelRise" target="_blank" rel="noopener">Source on GitHub</a> · <a href="https://drive.google.com/drive/folders/1sJkjULZLFaTLHJrNBzs_BzJ0kvTjMNbL" target="_blank" rel="noopener">Data folder</a> · <a href="https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-9/" target="_blank" rel="noopener">IPCC AR6 WG1 Ch. 9</a> · <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8723214" target="_blank" rel="noopener">NOAA station 8723214</a></p>
+</div></footer>
+
+<div class="tooltip" id="tip"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const NS='http://www.w3.org/2000/svg';
+const el=(n,a={})=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+const cv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>n.toLocaleString('en-US');
+const tip=$('#tip');
+function showTip(evt,html){tip.innerHTML=html;tip.style.opacity=1;
+  const r=tip.getBoundingClientRect();let x=evt.clientX+14,y=evt.clientY-10;
+  if(x+r.width>innerWidth-10)x=evt.clientX-r.width-14;
+  if(y+r.height>innerHeight-10)y=innerHeight-r.height-10;
+  tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){tip.style.opacity=0;}
+
+// theme — OS preference by default; the toggle stamps an override and remembers it
+const tb=$('#themeBtn');
+try{const saved=localStorage.getItem('mfr-theme');
+    if(saved==='dark'||saved==='light')document.documentElement.setAttribute('data-theme',saved);}catch(e){}
+tb.onclick=()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const now=cur||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const next=now==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  try{localStorage.setItem('mfr-theme',next);}catch(e){}
+  drawAll();};
+
+$('#copyBtn').onclick=async()=>{
+  const t=$('#promptText').innerText;
+  try{await navigator.clipboard.writeText(t);$('#copyBtn').textContent='Copied';
+      setTimeout(()=>$('#copyBtn').textContent='Copy',1600);}catch(e){}
+};
+
+let D=null;
+
+function axes(svg,x0,y0,w,h,xt,yt,xlab,ylab){
+  const g=cv('--grid'),ax=cv('--axis'),mu=cv('--muted');
+  yt.forEach(t=>{
+    const y=y0+h-t.p*h;
+    svg.appendChild(el('line',{x1:x0,x2:x0+w,y1:y,y2:y,stroke:g,'stroke-width':1}));
+    const tx=el('text',{x:x0-9,y:y+4,'text-anchor':'end',fill:mu,'font-size':11});
+    tx.textContent=t.l;svg.appendChild(tx);
+  });
+  svg.appendChild(el('line',{x1:x0,x2:x0+w,y1:y0+h,y2:y0+h,stroke:ax,'stroke-width':1}));
+  xt.forEach(t=>{
+    const tx=el('text',{x:x0+t.p*w,y:y0+h+19,'text-anchor':'middle',fill:mu,'font-size':11});
+    tx.textContent=t.l;svg.appendChild(tx);
+  });
+  if(ylab){const t=el('text',{x:x0-9,y:y0-11,'text-anchor':'end',fill:mu,'font-size':10.5,'font-weight':600});
+    t.textContent=ylab;svg.appendChild(t);}
+  if(xlab){const t=el('text',{x:x0+w,y:y0+h+37,'text-anchor':'end',fill:mu,'font-size':10.5,'font-weight':600});
+    t.textContent=xlab;svg.appendChild(t);}
+}
+
+/* ---------- 1. SLR ---------- */
+function drawSLR(){
+  const box=$('#slrChart');box.innerHTML='';
+  const W=Math.min(box.clientWidth||860,1040);
+  const narrow=W<640, H=narrow?330:400, m={l:narrow?40:52,r:narrow?14:150,t:16,b:44};
+  const w=W-m.l-m.r,h=H-m.t-m.b;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});box.appendChild(svg);
+  const Y0=2020,Y1=2150,V1=9;
+  const X=y=>m.l+(y-Y0)/(Y1-Y0)*w, Yc=v=>m.t+h-v/V1*h;
+  const xt=(narrow?[2020,2060,2100,2150]:[2020,2050,2075,2100,2125,2150]).map(y=>({p:(y-Y0)/(Y1-Y0),l:y}));
+  const yt=[0,2,4,6,8].map(v=>({p:v/V1,l:v+' ft'}));
+  axes(svg,m.l,m.t,w,h,xt,yt,'','ft above ~2005');
+
+  // low-confidence band
+  const lc=D.slr.ar6['SSP5-8.5*'];
+  if(lc){
+    const ys=Object.keys(lc).map(Number).sort((a,b)=>a-b).filter(y=>y<=Y1);
+    let up='',dn='';
+    ys.forEach((y,i)=>{const o=lc[y];if(o.hi==null)return;up+=(up?'L':'M')+X(y)+','+Yc(Math.min(o.hi,V1));});
+    for(let i=ys.length-1;i>=0;i--){const y=ys[i],o=lc[y];if(o.lo==null)continue;dn+='L'+X(y)+','+Yc(o.lo);}
+    if(up)svg.appendChild(el('path',{d:up+dn+'Z',fill:cv('--s7'),'fill-opacity':.13,stroke:'none'}));
+  }
+
+  const series=[
+    {k:'Intermediate',src:'noaa',c:'--s1',dash:'',lab:'NOAA Intermediate'},
+    {k:'Intermediate-High',src:'noaa',c:'--s2',dash:'',lab:'NOAA Int-High'},
+    {k:'SSP2-4.5',src:'ar6',c:'--s3',dash:'5 4',lab:'AR6 SSP2-4.5'},
+    {k:'SSP5-8.5',src:'ar6',c:'--s4',dash:'5 4',lab:'AR6 SSP5-8.5'},
+    {k:'SSP5-8.5*',src:'ar6',c:'--s7',dash:'2 4',lab:'AR6 SSP5-8.5 low-conf'},
+  ];
+  const pts=[];
+  series.forEach(s=>{
+    const raw=D.slr[s.src][s.k];if(!raw)return;
+    const ys=Object.keys(raw).map(Number).sort((a,b)=>a-b).filter(y=>y<=Y1);
+    let d='';const col=cv(s.c);
+    ys.forEach((y,i)=>{
+      const v=s.src==='noaa'?raw[y]:raw[y].m;
+      if(v==null||v>V1)return;
+      d+=(d?'L':'M')+X(y)+','+Yc(v);
+      pts.push({x:X(y),y:Yc(v),v,year:y,lab:s.lab,c:col});
+    });
+    svg.appendChild(el('path',{d,fill:'none',stroke:col,'stroke-width':2,
+      'stroke-dasharray':s.dash,'stroke-linejoin':'round','stroke-linecap':'round'}));
+    if(!narrow){
+      const last=ys.filter(y=>{const v=s.src==='noaa'?raw[y]:raw[y].m;return v!=null&&v<=V1;}).pop();
+      if(last!=null){
+        const v=s.src==='noaa'?raw[last]:raw[last].m;
+        const t=el('text',{x:X(last)+8,y:Yc(v)+4,fill:col,'font-size':11.5,'font-weight':600});
+        t.textContent=s.lab;svg.appendChild(t);
+      }
+    }
+  });
+
+  // reference: Irma
+  const irma=3.80-0.23;
+  svg.appendChild(el('line',{x1:m.l,x2:m.l+w,y1:Yc(irma),y2:Yc(irma),
+    stroke:cv('--critical'),'stroke-width':1,'stroke-dasharray':'3 5','stroke-opacity':.7}));
+  const it=el('text',{x:m.l+6,y:Yc(irma)-6,fill:cv('--critical'),'font-size':10.5,'font-weight':600});
+  it.textContent='Irma 2017 storm surge, above MHHW';svg.appendChild(it);
+
+  const hit=el('rect',{x:m.l,y:m.t,width:w,height:h,fill:'transparent'});
+  svg.appendChild(hit);
+  hit.addEventListener('mousemove',e=>{
+    const r=svg.getBoundingClientRect(),sx=(e.clientX-r.left)*(W/r.width);
+    const yr=Math.round((Y0+(sx-m.l)/w*(Y1-Y0))/10)*10;
+    const near=pts.filter(p=>p.year===yr);
+    if(!near.length){hideTip();return;}
+    let html=`<div class="tt">${yr}</div>`;
+    near.sort((a,b)=>b.v-a.v).forEach(p=>{
+      html+=`<div class="tr"><span style="color:${p.c}">■</span> ${p.lab} <b>${p.v.toFixed(2)} ft</b></div>`;});
+    showTip(e,html);
+  });
+  hit.addEventListener('mouseleave',hideTip);
+
+  $('#slrLegend').innerHTML=series.map(s=>
+    `<span><i class="swatch line" style="background:${cv(s.c)}"></i>${s.lab}</span>`).join('')
+    +`<span><i class="swatch" style="background:${cv('--s7')};opacity:.3"></i>low-confidence 17–83% range</span>`;
+}
+
+/* ---------- 2. drain audit ---------- */
+function drawDrain(){
+  const box=$('#drainChart');box.innerHTML='';
+  const rows=D.drain_audit.filter(r=>r.layer==='stormwater_lines').concat(
+             D.drain_audit.filter(r=>r.layer==='stormwater_points'));
+  const W=Math.min(box.clientWidth||820,1040);
+  const narrow=W<640, rh=narrow?24:21, m={l:narrow?126:210,r:narrow?52:60,t:8,b:30};
+  const H=m.t+m.b+rows.length*rh;
+  const w=W-m.l-m.r;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});box.appendChild(svg);
+  const col=c=>c==='official'?cv('--good'):c==='interpolate'?cv('--warning'):cv('--critical');
+  const mark=c=>c==='official'?'●':c==='interpolate'?'▲':'✕';
+  (narrow?[0,50,100]:[0,25,50,75,100]).forEach(p=>{
+    svg.appendChild(el('line',{x1:m.l+p/100*w,x2:m.l+p/100*w,y1:m.t,y2:m.t+rows.length*rh,
+      stroke:cv('--grid'),'stroke-width':1}));
+    const t=el('text',{x:m.l+p/100*w,y:H-9,'text-anchor':'middle',fill:cv('--muted'),'font-size':10.5});
+    t.textContent=p+'%';svg.appendChild(t);
+  });
+  rows.forEach((r,i)=>{
+    const y=m.t+i*rh, bw=Math.max(r.pct/100*w,r.pct>0?2.5:0);
+    const lab=el('text',{x:m.l-10,y:y+(narrow?16:14),'text-anchor':'end',fill:cv('--ink-2'),
+      'font-size':narrow?10.5:11.5});
+    lab.textContent=(narrow?'':(r.layer==='stormwater_lines'?'lines · ':'points · '))+r.field;
+    svg.appendChild(lab);
+    const bar=el('rect',{x:m.l,y:y+(narrow?6:4.5),width:bw,height:12,rx:4,fill:col(r.cls)});
+    svg.appendChild(bar);
+    const v=el('text',{x:m.l+bw+7,y:y+(narrow?16:14),fill:cv('--ink-2'),'font-size':narrow?10:11,'font-weight':600});
+    v.textContent=mark(r.cls)+' '+r.pct.toFixed(1)+'%';svg.appendChild(v);
+    const hit=el('rect',{x:m.l,y:y,width:w,height:rh,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,
+      `<div class="tt">${r.field}</div><div class="tr">${r.layer}</div>
+       <div class="tr">populated <b>${r.pct.toFixed(1)}%</b></div>
+       <div class="tr">class <b>${r.cls}</b></div>`));
+    hit.addEventListener('mouseleave',hideTip);
+    svg.appendChild(hit);
+  });
+}
+
+/* ---------- 3. FFE provenance ---------- */
+function drawFFEProv(){
+  const box=$('#ffeProvChart');box.innerHTML='';
+  const p=D.ffe.provenance, tot=D.ffe.buildings;
+  const order=[['observed_stratum','Observed stratum — ≥20 local certificates','--good'],
+               ['no_local_observations','No local observations — zone X, none exist','--critical'],
+               ['assumed_default','Assumed default — era or zone unknown','--warning']];
+  const W=Math.min(box.clientWidth||820,1040);
+  const narrow=W<640, H=narrow?152:126, m={l:0,r:0,t:6};
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});box.appendChild(svg);
+  let x=0;const gap=2;
+  order.forEach(([k,lab,c])=>{
+    const n=p[k]||0, bw=n/tot*W-gap;
+    if(bw<=0)return;
+    const r=el('rect',{x,y:m.t,width:bw,height:40,rx:5,fill:cv(c)});
+    svg.appendChild(r);
+    const hit=el('rect',{x,y:m.t,width:bw,height:40,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,
+      `<div class="tt">${lab}</div><div class="tr">buildings <b>${fmt(n)}</b></div>
+       <div class="tr">share <b>${(100*n/tot).toFixed(1)}%</b></div>`));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+    if(bw>78){
+      const t=el('text',{x:x+11,y:m.t+25,fill:'#fff','font-size':13,'font-weight':680});
+      t.textContent=(100*n/tot).toFixed(1)+'%';svg.appendChild(t);
+    }
+    x+=bw+gap;
+  });
+  let ly=m.t+62;
+  order.forEach(([k,lab,c])=>{
+    const n=p[k]||0;if(!n)return;
+    const sw=el('rect',{x:0,y:ly-9,width:11,height:11,rx:3,fill:cv(c)});svg.appendChild(sw);
+    const t=el('text',{x:18,y:ly,fill:cv('--ink-2'),'font-size':narrow?11:12.5});
+    t.textContent=`${lab} — ${fmt(n)} buildings`;svg.appendChild(t);
+    ly+=20;
+  });
+}
+
+/* ---------- 4. LAG histogram ---------- */
+function drawLAG(){
+  const box=$('#lagChart');box.innerHTML='';
+  const hh=D.ffe.lag_hist, W=Math.min(box.clientWidth||820,1040);
+  const narrow=W<640, H=narrow?250:300, m={l:narrow?42:52,r:16,t:22,b:48};
+  const w=W-m.l-m.r,h=H-m.t-m.b;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});box.appendChild(svg);
+  const raw=Math.max(...hh.counts), n=hh.counts.length;
+  const step=500, mx=Math.ceil(raw/step)*step;
+  const yt=[];for(let v=0;v<=mx;v+=(narrow?step*2:step))yt.push({p:v/mx,l:fmt(v)});
+  const xt=[];for(let i=0;i<n;i+=(narrow?6:4))xt.push({p:(i+.5)/n,l:hh.edges[i]});
+  axes(svg,m.l,m.t,w,h,xt,yt,'lowest adjacent grade, ft NAVD88','buildings');
+  const bw=w/n;
+  hh.counts.forEach((c,i)=>{
+    const bh=c/mx*h;
+    if(bh>0)svg.appendChild(el('rect',{x:m.l+i*bw+1,y:m.t+h-bh,width:bw-2,height:bh,rx:3,fill:cv('--seq-400')}));
+    const hit=el('rect',{x:m.l+i*bw,y:m.t,width:bw,height:h,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,
+      `<div class="tt">${hh.edges[i]} to ${hh.edges[i+1]} ft NAVD88</div>
+       <div class="tr">buildings <b>${fmt(c)}</b></div>`));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+  [[D.ffe.lag_pct[5],'p5 = 2.94 ft',1],[D.ffe.lag_pct[50],'median = 9.58 ft',-1]].forEach(([v,lab,dir])=>{
+    const i=(v-hh.edges[0])/(hh.edges[1]-hh.edges[0]);
+    const x=m.l+i*bw;
+    svg.appendChild(el('line',{x1:x,x2:x,y1:m.t,y2:m.t+h,stroke:cv('--s2'),'stroke-width':1.5,'stroke-dasharray':'4 4'}));
+    const t=el('text',{x:x+dir*7,y:m.t-4,fill:cv('--s2'),'font-size':11,'font-weight':600,
+      'text-anchor':dir>0?'start':'end'});
+    t.textContent=lab;svg.appendChild(t);
+  });
+}
+
+/* ---------- 5. stage exposure ---------- */
+function drawStage(){
+  const box=$('#stageChart');box.innerHTML='';
+  const rows=D.ffe.stage_exposure;
+  const W=Math.min(box.clientWidth||820,1040);
+  const narrow=W<640, rh=narrow?46:32, m={l:narrow?0:238,r:narrow?54:72,t:8,b:8};
+  const H=m.t+m.b+rows.length*rh, w=W-m.l-m.r;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});box.appendChild(svg);
+  const mx=Math.max(...rows.map(r=>r.buildings));
+  const steps=['--seq-100','--seq-250','--seq-400','--seq-550','--seq-700'];
+  rows.forEach((r,i)=>{
+    const y=m.t+i*rh, bw=Math.max(r.buildings/mx*w,2.5);
+    const c=cv(steps[Math.min(steps.length-1,Math.floor(i/rows.length*steps.length))]);
+    if(narrow){
+      const l1=el('text',{x:0,y:y+12,fill:cv('--ink'),'font-size':11.5,'font-weight':580});
+      l1.textContent=r.label;svg.appendChild(l1);
+      const l2=el('text',{x:0,y:y+24,fill:cv('--muted'),'font-size':10});
+      l2.textContent=r.stage.toFixed(2)+' ft NAVD88';svg.appendChild(l2);
+      svg.appendChild(el('rect',{x:0,y:y+30,width:bw,height:11,rx:4,fill:c}));
+      const v=el('text',{x:bw+7,y:y+39,fill:cv('--ink-2'),'font-size':10.5,'font-weight':620});
+      v.textContent=fmt(r.buildings);svg.appendChild(v);
+    } else {
+      const l1=el('text',{x:m.l-11,y:y+15,'text-anchor':'end',fill:cv('--ink'),'font-size':12,'font-weight':580});
+      l1.textContent=r.label;svg.appendChild(l1);
+      const l2=el('text',{x:m.l-11,y:y+27,'text-anchor':'end',fill:cv('--muted'),'font-size':10.5});
+      l2.textContent=r.stage.toFixed(2)+' ft NAVD88';svg.appendChild(l2);
+      svg.appendChild(el('rect',{x:m.l,y:y+7,width:bw,height:15,rx:4,fill:c}));
+      const v=el('text',{x:m.l+bw+8,y:y+19,fill:cv('--ink-2'),'font-size':11.5,'font-weight':620});
+      v.textContent=fmt(r.buildings);svg.appendChild(v);
+    }
+    const hit=el('rect',{x:m.l,y:y,width:w,height:rh,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,
+      `<div class="tt">${r.label}</div><div class="tr">stage <b>${r.stage.toFixed(2)} ft NAVD88</b></div>
+       <div class="tr">buildings below FFE <b>${fmt(r.buildings)}</b></div>
+       <div class="tr">share <b>${(100*r.buildings/D.ffe.buildings).toFixed(1)}%</b></div>`));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+}
+
+/* ---------- 6. Citizens ---------- */
+function drawCitizens(){
+  const box=$('#citizensChart');box.innerHTML='';
+  const rows=D.citizens;
+  const W=Math.min(box.clientWidth||820,1040);
+  const narrow=W<640, H=narrow?250:300, m={l:narrow?42:60,r:narrow?8:20,t:16,b:46};
+  const w=W-m.l-m.r,h=H-m.t-m.b;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});box.appendChild(svg);
+  const mx=250000;
+  const yt=(narrow?[0,.4,.8]:[0,.2,.4,.6,.8,1]).map(p=>({p,l:Math.round(p*mx/1000)+'k'}));
+  const xt=rows.map((r,i)=>({p:(i+.5)/rows.length,l:narrow?r.date.slice(2,7):r.date.slice(0,7)}));
+  axes(svg,m.l,m.t,w,h,xt,yt,'','policies in force');
+  const bw=w/rows.length;
+  rows.forEach((r,i)=>{
+    const bh=r.pif/mx*h;
+    svg.appendChild(el('rect',{x:m.l+i*bw+bw*.19,y:m.t+h-bh,width:bw*.62,height:bh,rx:4,fill:cv('--s1')}));
+    const t=el('text',{x:m.l+i*bw+bw*.5,y:m.t+h-bh-8,'text-anchor':'middle',
+      fill:cv('--ink-2'),'font-size':narrow?9:11,'font-weight':620});
+    t.textContent=narrow?Math.round(r.pif/1000)+'k':fmt(r.pif);svg.appendChild(t);
+    const hit=el('rect',{x:m.l+i*bw,y:m.t,width:bw,height:h,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,
+      `<div class="tt">${r.date}</div><div class="tr">policies <b>${fmt(r.pif)}</b></div>
+       <div class="tr">exposure <b>$${(r.exposure/1e9).toFixed(2)}B</b></div>
+       <div class="tr">premium <b>$${(r.premium/1e6).toFixed(1)}M</b></div>`));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+}
+
+/* ---------- 7. claims ---------- */
+function drawClaims(){
+  const box=$('#claimsChart');box.innerHTML='';
+  const zips=['33128','33130','33131','33132','33137'];
+  const cols=['--s1','--s2','--s3','--s4','--s5'];
+  const W=Math.min(box.clientWidth||820,1040);
+  const narrow=W<640, H=narrow?260:310, m={l:narrow?44:58,r:narrow?8:18,t:16,b:46};
+  const w=W-m.l-m.r,h=H-m.t-m.b;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});box.appendChild(svg);
+  const Y0=1978,Y1=2025,mx=3.5e6;
+  const X=y=>m.l+(y-Y0)/(Y1-Y0)*w, Yc=v=>m.t+h-v/mx*h;
+  const xt=(narrow?[1980,2000,2020]:[1980,1990,2000,2010,2020]).map(y=>({p:(y-Y0)/(Y1-Y0),l:y}));
+  const yt=(narrow?[0,2e6]:[0,1e6,2e6,3e6]).map(v=>({p:v/mx,l:'$'+(v/1e6)+'M'}));
+  axes(svg,m.l,m.t,w,h,xt,yt,'','paid, nominal $');
+  zips.forEach((z,i)=>{
+    const s=D.claims[z];if(!s)return;
+    let d='';const col=cv(cols[i]);
+    s.forEach(([y,v])=>{d+=(d?'L':'M')+X(y)+','+Yc(Math.min(v,mx));});
+    svg.appendChild(el('path',{d,fill:'none',stroke:col,'stroke-width':2,
+      'stroke-linejoin':'round','stroke-linecap':'round','stroke-opacity':.9}));
+    s.forEach(([y,v])=>{
+      if(v<250000)return;
+      svg.appendChild(el('circle',{cx:X(y),cy:Yc(Math.min(v,mx)),r:4,fill:col,
+        stroke:cv('--surface'),'stroke-width':2}));
+    });
+  });
+  const hit=el('rect',{x:m.l,y:m.t,width:w,height:h,fill:'transparent'});svg.appendChild(hit);
+  hit.addEventListener('mousemove',e=>{
+    const r=svg.getBoundingClientRect(),sx=(e.clientX-r.left)*(W/r.width);
+    const yr=Math.round(Y0+(sx-m.l)/w*(Y1-Y0));
+    let html=`<div class="tt">${yr}</div>`,any=false;
+    zips.forEach((z,i)=>{
+      const hitv=(D.claims[z]||[]).find(p=>p[0]===yr);
+      if(hitv&&hitv[1]>0){any=true;
+        html+=`<div class="tr"><span style="color:${cv(cols[i])}">■</span> ${z} <b>$${fmt(hitv[1])}</b></div>`;}
+    });
+    if(!any){hideTip();return;} showTip(e,html);
+  });
+  hit.addEventListener('mouseleave',hideTip);
+  $('#claimsLegend').innerHTML=zips.map((z,i)=>
+    `<span><i class="swatch line" style="background:${cv(cols[i])}"></i>${z}</span>`).join('');
+}
+
+function fillZipTable(){
+  const names={'33128':'Government Center','33130':'Little Havana edge / SW',
+    '33131':'Brickell','33132':'Downtown / Omni','33137':'Edgewater'};
+  const cs={},ps={};
+  D.claims_summary.forEach(r=>cs[r.zip]=r);
+  D.policy_summary.forEach(r=>ps[r.zip]=r);
+  $('#zipTable').innerHTML=Object.keys(names).map(z=>{
+    const c=cs[z]||{},p=ps[z]||{};
+    const weak=z==='33137';
+    return `<tr>
+      <td class="mono"><b>${z}</b></td><td>${names[z]}</td>
+      <td class="num">${fmt(+(c.claims||0))}</td>
+      <td class="num">$${((+(c.total_paid_usd||0))/1e6).toFixed(2)}M</td>
+      <td class="num">${fmt(+(p.records||0))}</td>
+      <td class="num">${p.pct_zone_X_BC||'—'}%</td>
+      <td class="num">${p.pct_postFIRM||'—'}%</td>
+      <td class="num">${weak?'<b>':''}${p.pct_with_lowestFloorElevation||'—'}%${weak?'</b>':''}</td>
+    </tr>`;}).join('');
+}
+
+/* ---------- 8. CA FAIR Plan ---------- */
+function drawFair(){
+  const box=$('#fairChart');if(!box)return;box.innerHTML='';
+  const rows=D.fair_plan||[];if(!rows.length)return;
+  const W=Math.min(box.clientWidth||820,1040);
+  const narrow=W<640, H=narrow?250:300, m={l:narrow?46:58,r:narrow?10:20,t:22,b:46};
+  const w=W-m.l-m.r,h=H-m.t-m.b;
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,width:'100%',height:H});box.appendChild(svg);
+  const mx=350000;
+  const yt=(narrow?[0,200000]:[0,100000,200000,300000]).map(v=>({p:v/mx,l:Math.round(v/1000)+'k'}));
+  const xt=rows.map((r,i)=>({p:(i+.5)/rows.length,l:narrow&&i%2?'':r.y}));
+  axes(svg,m.l,m.t,w,h,xt,yt,'','residential policies in force');
+  const bw=w/rows.length;
+  rows.forEach((r,i)=>{
+    const bh=r.pif/mx*h;
+    const pre=r.y<=2018;
+    svg.appendChild(el('rect',{x:m.l+i*bw+bw*.17,y:m.t+h-bh,width:bw*.66,height:bh,rx:4,
+      fill:pre?cv('--seq-250'):cv('--critical')}));
+    const hit=el('rect',{x:m.l+i*bw,y:m.t,width:bw,height:h,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,
+      `<div class="tt">${r.y}</div><div class="tr">FAIR Plan policies <b>${fmt(r.pif)}</b></div>`+
+      (pre?'<div class="tr">before the Camp Fire inflection</div>':'')));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+  const i18=rows.findIndex(r=>r.y===2019);
+  if(i18>0){
+    const x=m.l+i18*bw;
+    svg.appendChild(el('line',{x1:x,x2:x,y1:m.t,y2:m.t+h,stroke:cv('--s2'),
+      'stroke-width':1.5,'stroke-dasharray':'4 4'}));
+    const t=el('text',{x:x+7,y:m.t-6,fill:cv('--s2'),'font-size':11,'font-weight':600});
+    t.textContent='Camp Fire, Nov 2018';svg.appendChild(t);
+  }
+}
+
+/* ---------- exit timeline table ---------- */
+let exitFilterState='ALL';
+function fillExitTable(){
+  const tb=$('#exitTable'); if(!tb||!D.exit_timeline) return;
+  const rows=D.exit_timeline.filter(r=>exitFilterState==='ALL'||r.st===exitFilterState);
+  const SC={'CA':'--s1','FL':'--s2','LA':'--s3','CO':'--s4','US':'--s7'};
+  tb.innerHTML=rows.map(r=>{
+    const drv=(r.dr||'').replace(/</g,'&lt;');
+    const short=drv.length>96?drv.slice(0,96)+'…':drv;
+    return `<tr>
+      <td class="mono">${r.d}</td>
+      <td><span style="color:${cv(SC[r.st]||'--muted')};font-weight:640">${r.st}</span></td>
+      <td style="white-space:normal;max-width:210px"><b>${r.e}</b></td>
+      <td style="white-space:normal;max-width:150px">${r.a}</td>
+      <td style="white-space:normal;max-width:330px;color:var(--ink-2)" title="${drv.replace(/"/g,'&quot;')}">${short}</td>
+      <td>${r.u?`<a href="${r.u}" target="_blank" rel="noopener" style="color:var(--s1);text-decoration:none">source ↗</a>`:''}</td>
+    </tr>`;}).join('');
+}
+
+function drawAll(){
+  if(!D)return;
+  drawSLR();drawDrain();drawFFEProv();drawLAG();drawStage();drawCitizens();drawClaims();drawFair();
+}
+
+document.querySelectorAll('#exitFilter [data-st]').forEach(b=>{
+  b.onclick=()=>{
+    exitFilterState=b.dataset.st;
+    document.querySelectorAll('#exitFilter [data-st]').forEach(x=>{
+      x.style.background=x===b?'var(--s1)':'var(--surface)';
+      x.style.color=x===b?'#fff':'var(--ink)';
+      x.style.borderColor=x===b?'transparent':'var(--border)';});
+    fillExitTable();
+  };
+});
+
+fetch('data.json').then(r=>r.json()).then(d=>{D=d;fillZipTable();fillExitTable();
+    const f=document.querySelector('#exitFilter [data-st="ALL"]');
+    if(f){f.style.background='var(--s1)';f.style.color='#fff';f.style.borderColor='transparent';}
+    drawAll();})
+  .catch(()=>{document.querySelectorAll('figure').forEach(f=>{
+    if(!f.querySelector('svg'))f.insertAdjacentHTML('beforeend',
+      '<p style="color:var(--muted);font-size:13px">Chart data unavailable — data.json did not load.</p>');});});
+
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(drawAll,180);});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll);
+</script>
+</body>
+</html>
