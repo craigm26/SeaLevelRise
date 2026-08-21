@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start here: sea level rise, explained plainly</title>
+<meta name="description" content="A plain-language guide to sea level rise, ice sheets, El Niño, and what any of it has to do with Miami. No jargon, every term defined, common myths corrected.">
+<meta property="og:title" content="Sea level rise, explained plainly">
+<meta property="og:description" content="Melting sea ice does not raise sea level. Miami cannot be saved by a wall. Here is what actually matters, in plain language.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M3 21c3.2 0 3.2-3 6.5-3s3.3 3 6.5 3 3.2-3 6.5-3 3.3 3 6.5 3' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Cpath d='M6 14l5-5 5 5 5-5 5 5' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round' opacity='.55'/%3E%3C/svg%3E">
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --border:rgba(11,11,11,.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --good:#0ca30c; --critical:#d03b3b;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --maxw:1120px; --read:68ch;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19;
+    --ink:#fff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --border:rgba(255,255,255,.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:17px/1.72 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+.read{max-width:var(--read)}
+a{color:var(--s1)}
+nav{border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--page);z-index:9}
+nav .wrap{display:flex;gap:18px;align-items:center;height:52px;font-size:14px;overflow-x:auto}
+nav b{font-weight:600;margin-right:auto;white-space:nowrap}
+nav a{white-space:nowrap}
+h1{font-size:clamp(1.9rem,4.6vw,3rem);line-height:1.1;letter-spacing:-.02em;margin:0 0 16px;font-weight:650}
+h2{font-size:clamp(1.35rem,2.6vw,1.75rem);letter-spacing:-.012em;margin:0 0 12px;font-weight:640;line-height:1.25}
+h3{font-size:1.08rem;margin:26px 0 7px;font-weight:640}
+p{margin:0 0 15px}
+section{padding:46px 0;border-bottom:1px solid var(--border)}
+.kicker{font:600 12px/1 var(--sans);letter-spacing:.11em;text-transform:uppercase;color:var(--s1);margin-bottom:14px}
+.lede{font-size:1.14rem;color:var(--ink-2)}
+.tldr{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--s1);
+  border-radius:9px;padding:18px 20px;margin:22px 0}
+.tldr h2{font-size:1rem;margin:0 0 10px;letter-spacing:.04em;text-transform:uppercase;color:var(--s1)}
+.tldr ul{margin:0;padding-left:20px}
+.tldr li{margin-bottom:8px}
+.tldr li:last-child{margin-bottom:0}
+figure{margin:26px 0}
+figure svg{width:100%;height:auto;display:block;background:var(--surface);border:1px solid var(--border);border-radius:9px}
+figcaption{font-size:.9rem;color:var(--ink-2);margin-top:10px;line-height:1.6;max-width:var(--read)}
+.myth{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:17px 19px;margin-bottom:14px}
+.myth .m{font-weight:640;margin-bottom:7px;display:flex;gap:9px;align-items:baseline}
+.myth .tag{font:600 10px/1 var(--mono);letter-spacing:.06em;padding:4px 7px;border-radius:4px;
+  background:rgba(208,59,59,.13);color:var(--critical);text-transform:uppercase;white-space:nowrap}
+.myth .tag.ok{background:rgba(12,163,12,.13);color:var(--good)}
+.myth p{margin:0;color:var(--ink-2);font-size:.97rem}
+.myth p+p{margin-top:9px}
+.live{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:15px 17px;margin:20px 0}
+.live .h{font:600 10px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+.live .row{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:7px}
+.live .v{font:650 1.5rem/1 var(--sans);letter-spacing:-.02em}
+.live .l{font-size:.92rem;color:var(--ink-2)}
+.live .when{font:400 .78rem/1.4 var(--mono);color:var(--muted)}
+dl.gloss{margin:0}
+dl.gloss dt{font-weight:640;margin-top:16px}
+dl.gloss dd{margin:3px 0 0;color:var(--ink-2)}
+.next{display:grid;gap:13px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:22px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:17px 18px;
+  text-decoration:none;color:inherit;display:block}
+.card:hover{border-color:var(--s1)}
+.card .t{font-weight:640;margin-bottom:5px}
+.card .d{font-size:.9rem;color:var(--ink-2);line-height:1.55}
+footer{padding:34px 0 60px;color:var(--ink-2);font-size:.9rem}
+.q{font-weight:640;font-size:1.15rem;margin:30px 0 8px;letter-spacing:-.008em}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <b>Start here</b>
+  <a href="/">Data &amp; method</a>
+  <a href="/ice">Ice monitor</a>
+  <a href="/viewer">3D visualiser</a>
+</div></nav>
+
+<section><div class="wrap">
+  <div class="kicker">Plain language, no background needed</div>
+  <h1 class="read">Sea level rise, explained plainly</h1>
+  <p class="lede read">Most explanations of sea level rise are either too vague to be useful or
+  too technical to follow. This page is neither. It answers the questions people actually ask,
+  defines every term the first time it appears, and corrects the three misunderstandings that
+  come up most often.</p>
+
+  <div class="tldr read">
+    <h2>The short version</h2>
+    <ul>
+      <li><b>Melting sea ice does not raise sea level.</b> It is already floating. Only ice that
+      sits on land counts, and that is Greenland and Antarctica.</li>
+      <li><b>Miami cannot be saved by a sea wall.</b> The ground is porous limestone, so water
+      arrives from underneath rather than over the shore.</li>
+      <li><b>The land is also sinking</b>, adding roughly half a foot by 2100 no matter what
+      anyone does about emissions.</li>
+      <li><b>Before about 2070, cutting emissions barely changes the number.</b> That is not a
+      reason to do nothing. It means the near-term uncertainty lives in the ice, not in policy.</li>
+    </ul>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="read">What actually raises sea level</h2>
+  <div class="read">
+  <p>Two things, in roughly equal measure so far.</p>
+  <p><b>Water gets bigger when it warms.</b> Not a lot, but the ocean is enormous, so a small
+  expansion across an enormous volume adds up. This is called <b>thermal expansion</b>.</p>
+  <p><b>Ice that sits on land melts and runs into the sea.</b> That is new water arriving.
+  This is the part that can get dramatic, because Greenland and Antarctica hold enough ice
+  to raise the ocean by many metres if they were ever to go entirely.</p>
+  <p>And one thing that does <b>not</b> raise sea level at all, despite being the image
+  everyone pictures: floating sea ice.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 720 260" role="img" aria-labelledby="d1t d1d">
+      <title id="d1t">Two glasses of water showing that floating ice does not raise the level but ice resting on a shelf does</title>
+      <desc id="d1d">On the left, an ice cube floats in a glass; when it melts the water level is unchanged, because floating ice already displaces its own weight. On the right, an ice block rests on a ledge above the water; when it melts the water level rises, because that water was not in the glass before.</desc>
+      <g font-family="system-ui, sans-serif" font-size="13">
+        <!-- left glass -->
+        <text x="30" y="26" font-weight="650" font-size="14" fill="currentColor">Floating ice (sea ice)</text>
+        <text x="30" y="45" fill="currentColor" opacity=".65">Melts, level unchanged</text>
+        <rect x="40" y="70" width="180" height="150" rx="5" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="2"/>
+        <rect x="42" y="130" width="176" height="88" fill="#2a78d6" opacity=".28"/>
+        <line x1="42" y1="130" x2="218" y2="130" stroke="#2a78d6" stroke-width="2.5"/>
+        <rect x="95" y="112" width="62" height="36" rx="3" fill="#9ec5f4" opacity=".85" stroke="#2a78d6" stroke-width="1.5"/>
+        <text x="228" y="134" fill="#2a78d6" font-weight="650">← level</text>
+        <text x="228" y="152" fill="currentColor" opacity=".65" font-size="12">stays put</text>
+        <!-- right glass -->
+        <text x="410" y="26" font-weight="650" font-size="14" fill="currentColor">Ice on land (ice sheets)</text>
+        <text x="410" y="45" fill="currentColor" opacity=".65">Melts, level rises</text>
+        <rect x="420" y="70" width="180" height="150" rx="5" fill="none" stroke="currentColor" stroke-opacity=".45" stroke-width="2"/>
+        <rect x="422" y="140" width="176" height="78" fill="#2a78d6" opacity=".28"/>
+        <line x1="422" y1="140" x2="598" y2="140" stroke="#2a78d6" stroke-width="2.5" stroke-dasharray="5 4"/>
+        <line x1="422" y1="122" x2="598" y2="122" stroke="#eb6834" stroke-width="2.5"/>
+        <rect x="422" y="86" width="70" height="30" fill="currentColor" opacity=".18"/>
+        <rect x="432" y="60" width="52" height="28" rx="3" fill="#9ec5f4" opacity=".85" stroke="#2a78d6" stroke-width="1.5"/>
+        <text x="608" y="120" fill="#eb6834" font-weight="650" font-size="12">← rises</text>
+        <text x="608" y="146" fill="currentColor" opacity=".55" font-size="12">was here</text>
+      </g>
+    </svg>
+    <figcaption>Put an ice cube in a full glass and let it melt: the level does not change, because
+    floating ice already pushes aside exactly its own weight in water. Now rest an ice cube on a
+    ledge above the glass. When that melts, the level rises, because you added water that was not
+    in the glass before. Sea ice is the first glass. Greenland and Antarctica are the second.</figcaption>
+  </figure>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="read">Why Miami is a special case</h2>
+  <div class="read">
+  <p>Most coastal cities can, in principle, build something. A wall, a barrier, a raised
+  shoreline. Miami largely cannot, and the reason is geology rather than money or will.</p>
+  <p>South Florida sits on <b>porous limestone</b>. It is full of tiny connected holes, more like
+  a hard sponge than like solid rock. Seawater moves through it. That has two consequences that
+  most people find surprising.</p>
+  <p><b>First, a wall does not help much.</b> If the barrier is on the shoreline but the water
+  can travel underneath it through the rock, you have not stopped the water. You have only
+  changed where it appears.</p>
+  <p><b>Second, the ground water underneath the city rises with the sea.</b> That matters because
+  the storm drains are already sitting in it. In this project's own measurements, more than half
+  of the drainage structures with a known bottom depth already sit below the wet-season water
+  table. The drains are not empty pipes waiting for rain. They are partly full before the first
+  drop lands, which is why a heavy downpour on a normal sunny day can still flood a street.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 720 300" role="img" aria-labelledby="d2t d2d">
+      <title id="d2t">Cross-section of Miami showing seawater moving through porous limestone under a sea wall</title>
+      <desc id="d2d">A sea wall stands at the shoreline. Below ground, the limestone is porous, and arrows show seawater passing beneath the wall and pushing the ground water table upward under the city. Storm drains sit inside that raised water table, so they are already partly full before any rain falls.</desc>
+      <g font-family="system-ui, sans-serif" font-size="13">
+        <rect x="0" y="0" width="720" height="300" fill="none"/>
+        <!-- sky / sea -->
+        <rect x="470" y="60" width="250" height="70" fill="#2a78d6" opacity=".3"/>
+        <line x1="470" y1="60" x2="720" y2="60" stroke="#2a78d6" stroke-width="2.5"/>
+        <text x="560" y="45" fill="#2a78d6" font-weight="650">Sea</text>
+        <!-- land surface -->
+        <line x1="20" y1="130" x2="470" y2="130" stroke="currentColor" stroke-width="2.5"/>
+        <text x="40" y="120" fill="currentColor" font-weight="650">Downtown Miami</text>
+        <!-- sea wall -->
+        <rect x="462" y="50" width="14" height="80" fill="currentColor" opacity=".75"/>
+        <text x="392" y="44" fill="currentColor" font-weight="650" font-size="12">sea wall</text>
+        <line x1="440" y1="48" x2="462" y2="60" stroke="currentColor" stroke-width="1.2" opacity=".6"/>
+        <!-- limestone -->
+        <rect x="20" y="130" width="700" height="150" fill="currentColor" opacity=".08"/>
+        <text x="40" y="272" fill="currentColor" opacity=".6" font-size="12">porous limestone (water moves through it)</text>
+        <!-- pores -->
+        <g fill="currentColor" opacity=".17">
+          <circle cx="70" cy="200" r="5"/><circle cx="130" cy="230" r="4"/><circle cx="190" cy="195" r="6"/>
+          <circle cx="250" cy="235" r="4"/><circle cx="310" cy="205" r="5"/><circle cx="370" cy="240" r="5"/>
+          <circle cx="430" cy="200" r="4"/><circle cx="500" cy="235" r="6"/><circle cx="560" cy="200" r="4"/>
+          <circle cx="620" cy="238" r="5"/><circle cx="660" cy="198" r="4"/><circle cx="100" cy="255" r="4"/>
+        </g>
+        <!-- water table -->
+        <path d="M20 172 Q 140 166 260 170 T 470 164 L 720 158" fill="none" stroke="#1baf7a" stroke-width="2.5"/>
+        <text x="36" y="190" fill="#1baf7a" font-weight="650" font-size="12">ground water table</text>
+        <!-- flow arrows under the wall -->
+        <g stroke="#2a78d6" stroke-width="2.5" fill="none" opacity=".9">
+          <path d="M600 205 L 500 205"/><path d="M512 198 L 500 205 L 512 212"/>
+          <path d="M600 240 L 520 240"/><path d="M532 233 L 520 240 L 532 247"/>
+        </g>
+        <text x="505" y="180" fill="#2a78d6" font-size="12" font-weight="650">seawater passes underneath</text>
+        <!-- storm drain sitting in the water table -->
+        <rect x="200" y="130" width="26" height="56" fill="none" stroke="#eb6834" stroke-width="2.2"/>
+        <rect x="202" y="170" width="22" height="14" fill="#1baf7a" opacity=".45"/>
+        <text x="234" y="150" fill="#eb6834" font-weight="650" font-size="12">storm drain,</text>
+        <text x="234" y="166" fill="#eb6834" font-size="12">already partly full</text>
+      </g>
+    </svg>
+    <figcaption>Water arrives from below, not just over the edge. This is why Miami floods on
+    clear days at high tide, and why the storm drains cannot be treated as empty capacity when
+    the rain starts.</figcaption>
+  </figure>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="read">What El Niño has to do with it</h2>
+  <div class="read">
+  <p><b>El Niño</b> is a recurring warming of the surface water in the middle of the tropical
+  Pacific Ocean. It shows up every few years, lasts roughly a year, and shifts weather patterns
+  worldwide. Its opposite, a cooling, is called <b>La Niña</b>.</p>
+  <p>Here is the part that catches people out, including people who build dashboards for a
+  living. During a strong El Niño, the floating ice shelves around West Antarctica get
+  <b>taller and lighter at the same time</b>.</p>
+  <p>Taller, because the weather pattern brings more snow, which piles on top. Lighter, because
+  warmer water reaches in underneath and melts them from below. Height goes up. Mass goes down.</p>
+  <p>So if you measured only the height of that ice, from a satellite, during exactly the period
+  it was losing the most mass, your instrument would tell you it was <b>growing</b>. Same ice,
+  same moment, two honest measurements, opposite conclusions.</p>
+  <p>That is the single best reason to be careful with confident-looking numbers, and it is why
+  the monitor on this site labels what each measurement can and cannot tell you.</p>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 720 250" role="img" aria-labelledby="d3t d3d">
+      <title id="d3t">An ice shelf gaining height from snowfall while losing mass to warm water melting it from below</title>
+      <desc id="d3d">Snow falls on top of a floating ice shelf, increasing its height, shown by an upward arrow. At the same time warm Circumpolar Deep Water flows in underneath and melts the base, shown by a downward arrow for mass. The two arrows point in opposite directions, so a height measurement and a mass measurement disagree.</desc>
+      <g font-family="system-ui, sans-serif" font-size="13">
+        <rect x="0" y="150" width="720" height="100" fill="#2a78d6" opacity=".22"/>
+        <line x1="0" y1="150" x2="720" y2="150" stroke="#2a78d6" stroke-width="2"/>
+        <!-- grounded ice / land at left -->
+        <path d="M0 210 L 120 210 L 150 120 L 0 120 Z" fill="currentColor" opacity=".2"/>
+        <text x="14" y="145" fill="currentColor" opacity=".65" font-size="12">grounded ice</text>
+        <!-- floating shelf -->
+        <rect x="150" y="118" width="420" height="62" fill="#9ec5f4" opacity=".75" stroke="#2a78d6" stroke-width="1.5"/>
+        <text x="300" y="106" fill="currentColor" font-weight="650">floating ice shelf</text>
+        <!-- snow -->
+        <g fill="#ffffff" stroke="currentColor" stroke-opacity=".35" stroke-width=".6">
+          <circle cx="210" cy="70" r="4"/><circle cx="260" cy="52" r="4"/><circle cx="320" cy="76" r="4"/>
+          <circle cx="380" cy="48" r="4"/><circle cx="440" cy="72" r="4"/><circle cx="500" cy="58" r="4"/>
+          <circle cx="290" cy="92" r="3.4"/><circle cx="410" cy="90" r="3.4"/>
+        </g>
+        <g stroke="#1baf7a" stroke-width="3" fill="none">
+          <path d="M600 118 L 600 60"/><path d="M591 74 L 600 60 L 609 74"/>
+        </g>
+        <text x="616" y="72" fill="#1baf7a" font-weight="650" font-size="12">HEIGHT</text>
+        <text x="616" y="90" fill="#1baf7a" font-size="12">goes up (snow)</text>
+        <!-- warm water -->
+        <g stroke="#eb6834" stroke-width="2.5" fill="none" opacity=".95">
+          <path d="M120 218 Q 300 218 430 190"/><path d="M418 184 L 430 190 L 420 199"/>
+          <path d="M120 234 Q 320 234 470 205"/><path d="M458 199 L 470 205 L 460 214"/>
+        </g>
+        <text x="150" y="243" fill="#eb6834" font-size="12" font-weight="650">warm deep water melts the underside</text>
+        <g stroke="#eb6834" stroke-width="3" fill="none">
+          <path d="M600 182 L 600 232"/><path d="M591 218 L 600 232 L 609 218"/>
+        </g>
+        <text x="616" y="206" fill="#eb6834" font-weight="650" font-size="12">MASS</text>
+        <text x="616" y="224" fill="#eb6834" font-size="12">goes down (melt)</text>
+      </g>
+    </svg>
+    <figcaption>Height and mass move in opposite directions during a strong El Niño. Only mass
+    affects sea level. This is why the monitor treats "we could not measure the mass" as
+    important news rather than a minor gap.</figcaption>
+  </figure>
+
+  <div class="live read" id="liveEnso">
+    <div class="h">Where the Pacific is right now</div>
+    <div class="row"><span class="v" id="ensoV">…</span><span class="l" id="ensoL">loading current conditions</span></div>
+    <div class="when" id="ensoW"></div>
+  </div>
+  <p class="read" style="font-size:.95rem;color:var(--ink-2)">Two numbers are shown because they
+  answer different questions. The weekly figure is the ocean roughly a week ago. The official
+  index averages three months and is centred about two months back, so during a strengthening
+  event it always reads lower. Neither is wrong. They measure different things, and a page that
+  showed only one would be quietly picking an answer for you.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="read">Three things people get wrong</h2>
+  <div class="read">
+    <div class="myth">
+      <div class="m"><span class="tag">Not true</span><span>"The Arctic ice is melting, so the sea will rise."</span></div>
+      <p>Arctic sea ice is floating, so its melting adds essentially nothing to sea level. It
+      matters enormously for other reasons: it reflects sunlight, it shapes weather, and its
+      loss lets ocean waves reach places they could not reach before.</p>
+      <p>But if you want to know about sea level, watch <b>Greenland and Antarctica</b>, where
+      the ice rests on rock.</p>
+    </div>
+    <div class="myth">
+      <div class="m"><span class="tag">Not true</span><span>"Insurance companies would be fleeing if this were real."</span></div>
+      <p>This project searched for that specific evidence in six independent ways, including a
+      US Senate investigation covering 249 million policy records. <b>No insurer has ever given
+      sea level rise as its reason for leaving a market.</b> Not once.</p>
+      <p>That sounds like reassurance. It is not. Home insurance is sold one year at a time, so a
+      slow-moving hazard never needs to be announced. It gets quietly priced in, renewal by
+      renewal, or the policy simply is not offered again. A hazard that arrives over decades is
+      invisible in a market that re-prices every twelve months. The silence is what the
+      mechanism predicts.</p>
+    </div>
+    <div class="myth">
+      <div class="m"><span class="tag ok">True, but</span><span>"Cutting emissions will not change much by 2050."</span></div>
+      <p>Broadly correct, and routinely misused. Every major emissions scenario gives nearly the
+      same sea level in 2050, because the ocean and ice respond slowly to what we do. The paths
+      separate after about 2070.</p>
+      <p>What follows from that is the opposite of "so it does not matter." Choices made now
+      determine the second half of the century, when the paths are far apart. And near-term
+      uncertainty is not small, it just lives somewhere else: in how the ice sheets behave,
+      which is exactly what is hardest to predict and what this site watches.</p>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="read">How to read the monitor without being misled</h2>
+  <div class="read">
+  <p>The <a href="/ice">ice monitor</a> shows live numbers. Live is not the same as important,
+  and the difference is worth ten seconds of your attention.</p>
+  <p><b>Check the lag before the value.</b> Every tile says when the instrument actually observed
+  the thing, and how far behind that is now. A number is not fresh because a web page loaded.</p>
+  <p><b>Check whether it raises sea level at all.</b> Sea ice tiles are marked as context. They
+  update daily and look urgent, and they contribute nothing directly.</p>
+  <p><b>Notice what is missing.</b> The most important measurement, the actual mass of Greenland
+  and Antarctica, is marked unavailable, because the data requires a login this site does not
+  have. That gap is displayed rather than hidden, and the alarm that depends on it is shown as
+  unarmed. A dashboard with no gaps is usually a dashboard that hides them.</p>
+  </div>
+  <div class="live read" id="liveHealth">
+    <div class="h">What the monitor can see right now</div>
+    <div class="row"><span class="v" id="hv">…</span><span class="l" id="hl">loading</span></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="read">Words you will meet</h2>
+  <dl class="gloss read">
+    <dt>NAVD88</dt><dd>The official height reference for North America. Every elevation on this
+    site is measured against it, so numbers can be compared to each other.</dd>
+    <dt>MHHW (mean higher high water)</dt><dd>The average of the highest tide each day. Roughly
+    "normal high tide". At Virginia Key it is 0.23 feet above the NAVD88 zero point.</dd>
+    <dt>King tide</dt><dd>The highest predictable tides of the year, when the sun and moon line
+    up. Not a storm. This is when Miami floods on a clear day.</dd>
+    <dt>Storm surge</dt><dd>Water pushed ashore by a storm's wind and low pressure. Separate from
+    sea level rise, but it starts from whatever the sea level already is, which is the point.</dd>
+    <dt>Ice shelf</dt><dd>The floating edge of an ice sheet, where it has flowed off the land and
+    out over the sea. It does not raise sea level itself, but it acts like a doorstop holding
+    back the ice behind it.</dd>
+    <dt>Buttressing</dt><dd>That doorstop effect. Remove the shelf and the grounded ice behind it
+    flows faster into the ocean, and <i>that</i> ice does raise sea level.</dd>
+    <dt>Grounding line</dt><dd>The boundary where an ice sheet stops resting on rock and starts
+    floating. When it retreats inland, more ice becomes vulnerable.</dd>
+    <dt>Circumpolar Deep Water</dt><dd>A relatively warm layer of ocean water circling Antarctica
+    at depth. When it reaches in under the ice shelves it melts them from below, out of sight.</dd>
+    <dt>Subsidence</dt><dd>Land sinking. Around Miami it runs near 1 millimetre a year, which
+    adds about a third of a foot by 2100 regardless of emissions.</dd>
+    <dt>Anomaly</dt><dd>The difference from normal, rather than the raw value. "Two degrees above
+    average for this date" is an anomaly.</dd>
+    <dt>Sigma (σ)</dt><dd>How unusual something is, compared with how much it normally varies.
+    Around 2σ is roughly a once-in-twenty-times event. Bigger is rarer.</dd>
+    <dt>Screening level</dt><dd>An honest label for work that is good enough to see where the
+    problems are, and not detailed enough to design anything. This whole site is screening level.</dd>
+  </dl>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="read">Where to go next</h2>
+  <div class="next">
+    <a class="card" href="/ice"><div class="t">The ice monitor →</div>
+      <div class="d">Live indicators for the processes behind the worst case, with the lag on every number and the gaps stated.</div></a>
+    <a class="card" href="/viewer"><div class="t">The 3D visualiser →</div>
+      <div class="d">Move a sea level slider and watch downtown Miami respond, building by building. Needs a reasonably capable device.</div></a>
+    <a class="card" href="/"><div class="t">The data and method →</div>
+      <div class="d">Every number, its source, and a stated account of where the public record runs out. More technical.</div></a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <p class="read">This is a screening-level public information project. It is not an engineered
+  flood study, and nothing here is advice about a specific property, insurance policy, or
+  purchase. If you need that, you need an elevation certificate and a professional.</p>
+  <p class="read">Code MIT, derived data CC BY 4.0. Everything traces to public sources, listed
+  on the <a href="/">data and method</a> page.</p>
+</div></footer>
+
+<script>
+const API='https://sealevelrise-ice.craigm26.workers.dev/api/ice';
+fetch(API).then(r=>r.json()).then(d=>{
+  const by=Object.fromEntries(d.indicators.map(i=>[i.id,i]));
+  const wk=by.nino34_weekly, on=by.oni;
+  if(wk && wk.value!=null){
+    document.getElementById('ensoV').textContent=(wk.value>0?'+':'')+wk.value+' °C';
+    document.getElementById('ensoL').textContent=wk.phase+' (weekly reading)';
+    let w='Weekly figure observed '+wk.observed+', about '+wk.lagDays+' days ago.';
+    if(on && on.value!=null){
+      w+=' Official index: '+(on.value>0?'+':'')+on.value+' °C, which is called “'+on.phase+'”.';
+    }
+    document.getElementById('ensoW').textContent=w;
+  } else {
+    document.getElementById('ensoV').textContent='—';
+    document.getElementById('ensoL').textContent='current conditions unavailable right now';
+  }
+  const h=d.sourceHealth||{};
+  document.getElementById('hv').textContent=(h.ok||0)+' of '+((h.ok||0)+(h.stale||0)+(h.error||0)+(h.unavailable||0));
+  document.getElementById('hl').textContent='sources reporting normally. '+(h.stale||0)+' overdue, '
+    +(h.error||0)+' failing, '+(h.unavailable||0)+' with no data path at all.';
+}).catch(()=>{
+  document.getElementById('ensoV').textContent='—';
+  document.getElementById('ensoL').textContent='could not reach the monitor. That failure is shown rather than hidden.';
+  document.getElementById('hv').textContent='—';
+  document.getElementById('hl').textContent='could not reach the monitor.';
+});
+</script>
+</body>
+</html>

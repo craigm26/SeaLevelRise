@@ -10,6 +10,7 @@ stated account of where the public record runs out.
 |---|---|
 | `index.html` | Data catalogue, method, provenance audit, sea-level scenarios, insurer-exit analysis |
 | `viewer.html` | **3D visualiser** — LiDAR terrain, Biscayne aquifer, drainage, injection wells, buildings |
+| `learn.html` | **Start here** — plain-language guide for a general audience, no background needed |
 | `ice.html` | **Upstream ice monitor** — live indicators behind the high-end tail, with the lag on every number |
 | `ice-monitor/` | Cloudflare Worker + KV that feeds `ice.html` on a six-hourly cron |
 | `CLAUDE.md` | Handoff context — read this before modifying anything |
@@ -171,7 +172,12 @@ so they cannot be moved after the fact. The GRACE-FO tripwire is published as **
 rather than dropped.
 
 Live sources: NSIDC Sea Ice Index v4.0 (both poles, with 1981–2010 climatology for σ
-anomalies), NOAA CPC Niño 3.4, NOAA CO-OPS station 8723214. Imagery via NASA Worldview —
+anomalies), NOAA CPC weekly Niño 3.4 and the official ONI, NOAA CO-OPS station 8723214.
+
+Both ENSO indices are shown because they answer different questions. The weekly value is the
+ocean about nine days ago; ONI is a three-month running mean centred two months back and is what
+the phase names are defined against. During an intensifying event they disagree, and that
+disagreement is the honest answer rather than a bug to be smoothed away. Imagery via NASA Worldview —
 Greenland renders in northern summer; the Amundsen Sea is in polar night from roughly
 April to September and returns a black frame, which the page says rather than hides.
 

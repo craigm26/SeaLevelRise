@@ -106,51 +106,117 @@ async function seaIce(pole, now) {
 }
 
 /* ------------------------------------------------------------------ *
- * NOAA CPC — Niño 3.4 SST anomaly.
- * Monthly by construction. ONI proper is a 3-month running mean, so it can
- * never be "live"; presenting it as such would be its own small lie.
+ * NOAA CPC — ENSO, two indices with deliberately different jobs.
+ *
+ * WEEKLY Niño 3.4 is the freshest honest signal (~1 week behind). ONI is the
+ * OFFICIAL index and the one the phase names are defined against, but it is a
+ * three-month running mean and therefore structurally ~2 months old. Publishing
+ * only ONI understates how fast things are moving; publishing only the weekly
+ * value invites people to call a phase that ONI has not declared. So: both,
+ * each labelled with what it is for.
+ *
+ * Trap for whoever edits this: the previous weekly file, `wksst8110.for`, still
+ * returns HTTP 200 but its data STOPS IN JANUARY 2021. A silently frozen file
+ * is worse than a 404. The live one is `wksst9120.for` (1991–2020 base period).
  * ------------------------------------------------------------------ */
-async function nino34(now) {
-  const url =
-    'https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/detrend.nino34.ascii.txt';
+const MON3 = { JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12 };
+// Centre month of each CPC overlapping season.
+const SEASON_MID = { DJF:1,JFM:2,FMA:3,MAM:4,AMJ:5,MJJ:6,JJA:7,JAS:8,ASO:9,SON:10,OND:11,NDJ:12 };
+
+function phaseOf(a) {
+  return a >= 2.0 ? 'very strong El Niño' :
+         a >= 1.5 ? 'strong El Niño' :
+         a >= 1.0 ? 'moderate El Niño' :
+         a >= 0.5 ? 'weak El Niño' :
+         a <= -2.0 ? 'very strong La Niña' :
+         a <= -1.5 ? 'strong La Niña' :
+         a <= -1.0 ? 'moderate La Niña' :
+         a <= -0.5 ? 'weak La Niña' : 'neutral';
+}
+
+const ENSO_CAVEAT =
+  'ENSO does not act on Antarctica with a single sign. During strong El Niño, Amundsen Sea ' +
+  'ice shelves tend to GAIN height from increased snowfall while LOSING mass to warmer ' +
+  'Circumpolar Deep Water at the base. A dashboard built on altimetric height would show ' +
+  'those shelves thickening during exactly the episodes that are thinning them. ' +
+  'See Paolo et al., Nature Geoscience 2018 — verify before citing.';
+
+async function nino34Weekly(now) {
+  const url = 'https://www.cpc.ncep.noaa.gov/data/indices/wksst9120.for';
+  const txt = await get(url);
+  const rows = [];
+  for (const line of txt.split('\n')) {
+    const p = line.trim().split(/\s+/);
+    const m = /^(\d{2})([A-Z]{3})(\d{4})$/.exec(p[0] || '');
+    if (!m || p.length < 9) continue;
+    // Header order: Nino1+2, Nino3, Nino34, Nino4 -> anomaly pairs at 2,4,6,8
+    const anom = parseFloat(p[6]);
+    if (!isFinite(anom)) continue;
+    rows.push({
+      date: `${m[3]}-${String(MON3[m[2]]).padStart(2, '0')}-${m[1]}`,
+      anom,
+    });
+  }
+  if (!rows.length) throw new Error('no parseable weekly Niño 3.4 row');
+  const last = rows[rows.length - 1];
+  const trend = rows.slice(-8);
+  const delta = +(last.anom - trend[0].anom).toFixed(2);
+
+  return {
+    id: 'nino34_weekly',
+    group: 'Ocean forcing',
+    label: 'Niño 3.4 SST anomaly (weekly)',
+    value: last.anom,
+    unit: '°C',
+    observed: last.date,
+    lagDays: dayDiff(now, last.date),
+    phase: phaseOf(last.anom),
+    trend: trend.map((r) => ({ t: r.date, v: r.anom })),
+    trendNote:
+      `${delta >= 0 ? '+' : ''}${delta} °C over the last ${trend.length} weeks ` +
+      `(${trend[0].anom} → ${last.anom})`,
+    raisesSeaLevel: null,
+    caveat: ENSO_CAVEAT,
+    cadence: 'weekly',
+    expectedLagDays: 12,
+    source: { name: 'NOAA CPC weekly SST, 1991–2020 base', url },
+  };
+}
+
+async function oni(now) {
+  const url = 'https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt';
   const txt = await get(url);
   let last = null;
   for (const line of txt.split('\n')) {
     const p = line.trim().split(/\s+/);
-    if (p.length < 5 || !/^\d{4}$/.test(p[0])) continue;
-    last = { y: +p[0], m: +p[1], anom: parseFloat(p[4]) };
+    if (p.length < 4 || !SEASON_MID[p[0]]) continue;
+    const a = parseFloat(p[3]);
+    if (!isFinite(a)) continue;
+    last = { season: p[0], year: +p[1], anom: a };
   }
-  if (!last) throw new Error('no parseable Niño 3.4 row');
-
-  const observed = `${last.y}-${String(last.m).padStart(2, '0')}-01`;
-  const a = last.anom;
-  const phase =
-    a >= 1.5 ? 'strong El Niño' :
-    a >= 1.0 ? 'moderate El Niño' :
-    a >= 0.5 ? 'weak El Niño' :
-    a <= -1.5 ? 'strong La Niña' :
-    a <= -1.0 ? 'moderate La Niña' :
-    a <= -0.5 ? 'weak La Niña' : 'neutral';
+  if (!last) throw new Error('no parseable ONI row');
+  const observed = `${last.year}-${String(SEASON_MID[last.season]).padStart(2, '0')}-15`;
 
   return {
-    id: 'nino34',
+    id: 'oni',
     group: 'Ocean forcing',
-    label: 'Niño 3.4 SST anomaly',
-    value: a,
+    label: `Oceanic Niño Index (official, ${last.season})`,
+    value: last.anom,
     unit: '°C',
     observed,
     lagDays: dayDiff(now, observed),
-    phase,
+    phase: phaseOf(last.anom),
     raisesSeaLevel: null,
     caveat:
-      'ENSO does not act on Antarctica with a single sign. During strong El Niño, Amundsen Sea ' +
-      'ice shelves tend to GAIN height from increased snowfall while LOSING mass to warmer ' +
-      'Circumpolar Deep Water at the base. A dashboard built on altimetric height would show ' +
-      'those shelves thickening during exactly the episodes that are thinning them. ' +
-      'See Paolo et al., Nature Geoscience 2018 — verify before citing.',
-    cadence: 'monthly (ONI is a 3-month running mean and cannot be live)',
-    expectedLagDays: 62,
-    source: { name: 'NOAA CPC detrended Niño 3.4', url },
+      'ONI is the index El Niño and La Niña are officially defined against, and it is a ' +
+      'THREE-MONTH RUNNING MEAN centred two months back. It therefore cannot be current, by ' +
+      'construction, and will always read lower than the weekly value during an intensifying ' +
+      'event. That is not a lag to be fixed; it is what the index is. Use the weekly figure ' +
+      'for "what is happening now" and ONI for "what it will officially be called". ' +
+      ENSO_CAVEAT,
+    cadence: 'monthly, 3-month running mean centred ~2 months back',
+    expectedLagDays: 80,
+    source: { name: 'NOAA CPC Oceanic Niño Index', url },
   };
 }
 
@@ -246,7 +312,11 @@ function tripwires(byId) {
       label: 'Niño 3.4 at or above +1.5 °C (strong El Niño)',
       threshold: 1.5,
       unit: '°C',
-      current: byId.nino34?.value ?? null,
+      // Deliberately read from the WEEKLY value, not ONI. ONI is a 3-month mean
+      // centred two months back, so during an intensifying event it crosses a
+      // threshold long after the ocean does. A tripwire that waits for ONI is a
+      // tripwire that reports the past.
+      current: byId.nino34_weekly?.value ?? null,
       test: (v) => v !== null && v >= 1.5,
       means:
         'Elevated basal melt risk for Amundsen Sea ice shelves via warm Circumpolar Deep Water, ' +
@@ -293,7 +363,8 @@ async function build(env) {
   const tasks = [
     ['seaice_north', () => seaIce('north', now)],
     ['seaice_south', () => seaIce('south', now)],
-    ['nino34', () => nino34(now)],
+    ['nino34_weekly', () => nino34Weekly(now)],
+    ['oni', () => oni(now)],
     ['virginia_key_wl', () => virginiaKey(now)],
   ];
 

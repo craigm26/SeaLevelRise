@@ -28,6 +28,7 @@ GitHub does NOT redeploy; run wrangler by hand). Repo is pushed. Since the first
 * Charts: `role=img` + title/desc + a visually-hidden data table each.
 * OpenFEMA v3 migration verified — **and it moves numbers**. See below.
 * Homepage now leads with finding 7 rather than "here is a dataset".
+* `learn.html` — plain-language public guide, linked from every other page.
 
 ## Non-negotiables if you modify this
 
@@ -127,9 +128,27 @@ citation on the page is **flagged for verification** — confirm it before relyi
 rather than showing an empty panel. An embedded microwave layer for that region was attempted
 and did not work through the Worldview snapshot API; that is a stated gap.
 
+**Two ENSO indices on purpose.** The weekly Niño 3.4 figure is the freshest honest signal
+(~9 days behind). ONI is the index the phase names are officially defined against, but it is a
+three-month running mean centred two months back, so during an intensifying event it always
+reads lower. On 2026-08-20 the weekly value was **+2.7 °C (very strong)** while ONI still said
+**+1.39 °C (moderate)**. Publishing only ONI understates the pace; publishing only the weekly
+value invites calling a phase that has not officially been called. The tripwire deliberately
+reads the **weekly** value — one that waits for ONI is a tripwire that reports the past.
+
+**Silently frozen file trap.** The old weekly file `wksst8110.for` still returns **HTTP 200**
+and its data **stops in January 2021**. A frozen 200 is worse than a 404 because nothing alerts.
+The live file is `wksst9120.for` (1991–2020 base). Check the last row's date, not the status code.
+
 Live sources: NSIDC Sea Ice Index v4.0 — note **v4.0, not v3.0**, the path silently moved —
-NOAA CPC Niño 3.4, NOAA CO-OPS 8723214. NSIDC daily CSVs are fetched by HTTP **range request**
-(last 4 KB of a 1.8 MB file); keep that.
+NOAA CPC weekly SST (`wksst9120.for`), NOAA CPC ONI (`oni.ascii.txt`), NOAA CO-OPS 8723214.
+NSIDC daily CSVs are fetched by HTTP **range request** (last 4 KB of a 1.8 MB file); keep that.
+
+**`learn.html` is the public on-ramp.** Plain language, every term defined, three common
+misunderstandings corrected, three explanatory SVG diagrams with full `title`/`desc`. It reads
+the same live API as `ice.html`. Keep it jargon-free: if a term has to appear, define it in the
+glossary at the bottom. It is the only page written for someone with no background, and that is
+the whole point of it.
 
 ## OpenFEMA v3 — migrated, and the numbers moved
 
